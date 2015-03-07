@@ -31,7 +31,7 @@ int main(int /*argc*/, char* /*argv*/[])
         2179683, 2179683, 2179683, 2179683,
         2179683, 2179683, 2179683, 2179683
     };
-    scope_block<uint8_t> yuv(0);
+    scope_block<uint8_t> yuv;
 
     printf("RGB-888: ");
     rgb_t rgb_888[sizeof(data) / sizeof(uint32_t)];

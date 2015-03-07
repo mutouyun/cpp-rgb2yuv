@@ -159,18 +159,22 @@ class scope_block
     friend class scope_block;
 
     T *         block_;
-    GLB_ size_t count_;
+    GLB_ size_t size_;
     bool        trust_;
 
 public:
-    scope_block(GLB_ size_t count)
-        : block_(NULL), count_(0), trust_(false)
+    scope_block(void)
+        : block_(NULL), size_(0), trust_(false)
+    {}
+
+    explicit scope_block(GLB_ size_t count)
+        : block_(NULL), size_(0), trust_(false)
     {
         reset(count);
     }
 
     scope_block(T * block, GLB_ size_t count)
-        : block_(NULL), count_(0), trust_(false)
+        : block_(NULL), size_(0), trust_(false)
     {
         reset(block, count);
     }
@@ -181,7 +185,7 @@ public:
      */
     template <typename U>
     scope_block(scope_block<U, AllocT> const & rhs)
-        : block_(NULL), count_(0), trust_(false)
+        : block_(NULL), size_(0), trust_(false)
     {
         this->move(rhs);
     }
@@ -194,7 +198,7 @@ public:
     void reset(GLB_ size_t count)
     {
         this->~scope_block();
-        count_ = count;
+        size_  = count * sizeof(T);
         block_ = static_cast<T *>( AllocT::alloc(this->size()) );
         trust_ = true;
     }
@@ -202,7 +206,7 @@ public:
     void reset(T * block, GLB_ size_t count)
     {
         this->~scope_block();
-        count_ = count;
+        size_  = count * sizeof(T);
         block_ = block;
         trust_ = false;
     }
@@ -218,22 +222,17 @@ public:
     void swap(scope_block & rhs)
     {
         STD_ swap(this->block_, rhs.block_);
-        STD_ swap(this->count_, rhs.count_);
+        STD_ swap(this->size_ , rhs.size_ );
         STD_ swap(this->trust_, rhs.trust_);
     }
 
     template <typename U>
     void swap(scope_block<U, AllocT> & rhs)
     {
-        // swap block pointer
         void * tmp_ptr = this->block_;
         this->block_ = reinterpret_cast<T *>(rhs.block_);
         rhs  .block_ = reinterpret_cast<U *>(tmp_ptr);
-        // swap block count var
-        GLB_ size_t ths_size = this->size(), rhs_size = rhs.size();
-        this->count_ = rhs_size / sizeof(T); // re-split the memory block
-        rhs  .count_ = ths_size / sizeof(U);
-        // swap the trust flag
+        STD_ swap(this->size_ , rhs.size_ );
         STD_ swap(this->trust_, rhs.trust_);
     }
 
@@ -245,14 +244,14 @@ public:
     {
         T * data_ret = this->data();
         block_ = NULL;
-        count_ = 0;
+        size_  = 0;
         trust_ = false;
         return data_ret;
     }
 
     T *         data (void) const { return block_; }
-    GLB_ size_t count(void) const { return count_; }
-    GLB_ size_t size (void) const { return this->count() * sizeof(T); }
+    GLB_ size_t size (void) const { return size_ ; }
+    GLB_ size_t count(void) const { return size_ / sizeof(T); }
     bool   is_trusted(void) const { return trust_; }
 
     T       & operator[](GLB_ size_t pos)       { return block_[pos]; }
