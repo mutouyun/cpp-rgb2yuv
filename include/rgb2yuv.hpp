@@ -101,7 +101,9 @@ enum plane_type
 
     plane_R,
     plane_G,
-    plane_B
+    plane_B,
+
+    plane_MAX
 };
 
 ////////////////////////////////////////////////////////////////
@@ -211,7 +213,7 @@ public:
         trust_ = false;
     }
 
-    void trust(bool t) { trust_ = t; }
+    void trust(void) { trust_ = true; }
 
     template <typename U>
     void move(scope_block<U, AllocT> const & rhs)
@@ -263,6 +265,13 @@ private:
      * to make scope_block non-copyable.
      */
     scope_block & operator=(const scope_block &); // No need to implement it.
+    /*
+     * Disallow heap allocation of scope_block.
+     */
+    void * operator new     (GLB_ size_t);
+    void * operator new[]   (GLB_ size_t);
+    void   operator delete  (void *);
+    void   operator delete[](void *);
 };
 
 template <typename T, typename U, typename A>
@@ -380,17 +389,42 @@ struct planes_t
 
 struct convertor
 {
-    GLB_ int32_t fa_, fb_, fc_, fd_, fe_;
+    static const GLB_ int32_t MAX = static_cast<GLB_ uint8_t>(~0);
 
     static GLB_ uint8_t clip(GLB_ int32_t value)
     {
-        return static_cast<GLB_ uint8_t>( (value < 0  ) ? 0   : 
-                                          (value > 255) ? 255 : value );
+        return static_cast<GLB_ uint8_t>( (value < 0) ? 0 :
+                                          (value > convertor::MAX) ? convertor::MAX : value );
     }
 
-    GLB_ uint8_t convert(R2Y_ planes_t const & in_p) const
+    GLB_ int32_t fac_;
+    GLB_ int32_t tb_[3][convertor::MAX + 1];
+
+    void init(GLB_ int32_t (& matrix)[4])
     {
-        return clip(((fa_ * in_p.a_ + fb_ * in_p.b_ + fc_ * in_p.c_ + fd_) >> 8) + fe_);
+        fac_ = matrix[3];
+        for (GLB_ size_t n = 0; n < (sizeof(tb_) / sizeof(tb_[0])); ++n)
+            for (GLB_ int32_t i = 0; i <= convertor::MAX; ++i)
+                tb_[n][i] = matrix[n] * i;
+    }
+
+    GLB_ int32_t convert(R2Y_ planes_t const & in_p) const
+    {
+        return (tb_[0][in_p.a_] + tb_[1][in_p.b_] + tb_[2][in_p.c_] + fac_) >> 8;
+    }
+
+    template <bool NeedClip>
+    typename R2Y_ enable_if<(NeedClip == true),
+    GLB_ uint8_t>::type convert(R2Y_ planes_t const & in_p) const
+    {
+        return clip(this->convert(in_p));
+    }
+
+    template <bool NeedClip>
+    typename R2Y_ enable_if<(NeedClip == false),
+    GLB_ uint8_t>::type convert(R2Y_ planes_t const & in_p) const
+    {
+        return this->convert(in_p);
     }
 };
 
@@ -400,23 +434,35 @@ inline R2Y_ convertor const * factor_matrix(void)
      * The factors for converting between YUV and RGB
      * See: https://msdn.microsoft.com/en-us/library/ms893078.aspx
      */
-    static R2Y_ convertor const matrix[] =
+    static GLB_ int32_t matrix[R2Y_ plane_MAX][4] =
     {
-        {  66 ,  129,  25 ,  128  , 16  },  // Y
-        { -38 , -74 ,  112,  128  , 128 },  // U/Cb
-        {  112, -94 , -18 ,  128  , 128 },  // V/Cr
+        {  66 ,  129,  25 ,  4224  },  // Y
+        { -38 , -74 ,  112,  32896 },  // U/Cb
+        {  112, -94 , -18 ,  32896 },  // V/Cr
 
-        {  298,  0  ,  409, -56992, 0   },  // R
-        {  298, -100, -208,  34784, 0   },  // G
-        {  298,  516,  0  , -70688, 0   }   // B
+        {  298,  0  ,  409, -56992 },  // R
+        {  298, -100, -208,  34784 },  // G
+        {  298,  516,  0  , -70688 }   // B
     };
-    return matrix;
+    // Create and initialize the convertors
+    static R2Y_ convertor conv[R2Y_ plane_MAX];
+    static struct run
+    {
+        run(void)
+        {
+            for (GLB_ size_t i = 0; i < R2Y_ plane_MAX; ++i)
+                conv[i].init(matrix[i]);
+        }
+    // It makes initialization run only once when the funtion "factor_matrix" be called
+    } R2Y_UNUSED_ init_once;
+    // Return the convertors
+    return conv;
 }
 
 template <R2Y_ plane_type P>
 GLB_ uint8_t pixel_convert(R2Y_ planes_t const & in_p)
 {
-    return factor_matrix()[P].convert(in_p);
+    return factor_matrix()[P].convert<R2Y_ is_rgb_plane<P>::value>(in_p);
 }
 
 template <R2Y_ plane_type P>
@@ -600,13 +646,13 @@ template <> struct yuv_t<R2Y_ yuv_Y41P>
 
 /* YUV 4:2:2 */
 
-template <R2Y_ supported Tar>
-typename R2Y_ enable_if<(Tar == R2Y_ yuv_YUY2) || (Tar == R2Y_ yuv_YVYU) || 
-                        (Tar == R2Y_ yuv_UYVY) || (Tar == R2Y_ yuv_VYUY)
+template <R2Y_ supported S>
+typename R2Y_ enable_if<(S == R2Y_ yuv_YUY2) || (S == R2Y_ yuv_YVYU) || 
+                        (S == R2Y_ yuv_UYVY) || (S == R2Y_ yuv_VYUY)
 >::type transform_to(R2Y_ scope_block<R2Y_ rgb_t> const & in_data, GLB_ size_t in_w, GLB_ size_t in_h,
                      R2Y_ scope_block<R2Y_ byte_t>      & ot_data)
 {
-    R2Y_DETAIL_ yuv_t<Tar> * p_yuv = reinterpret_cast<R2Y_DETAIL_ yuv_t<Tar> *>( ot_data.data() );
+    R2Y_DETAIL_ yuv_t<S> * p_yuv = reinterpret_cast<R2Y_DETAIL_ yuv_t<S> *>( ot_data.data() );
     GLB_ size_t s = in_w * in_h;
     GLB_ uint16_t u_k, v_k;
     for (GLB_ size_t i = 0; i < s; ++p_yuv)
@@ -628,12 +674,12 @@ typename R2Y_ enable_if<(Tar == R2Y_ yuv_YUY2) || (Tar == R2Y_ yuv_YVYU) ||
 
 /* YUV 4:1:1 */
 
-template <R2Y_ supported Tar>
-typename R2Y_ enable_if<(Tar == R2Y_ yuv_Y41P)
+template <R2Y_ supported S>
+typename R2Y_ enable_if<(S == R2Y_ yuv_Y41P)
 >::type transform_to(R2Y_ scope_block<R2Y_ rgb_t> const & in_data, GLB_ size_t in_w, GLB_ size_t in_h,
                      R2Y_ scope_block<R2Y_ byte_t>      & ot_data)
 {
-    R2Y_DETAIL_ yuv_t<Tar> * p_yuv = reinterpret_cast<R2Y_DETAIL_ yuv_t<Tar> *>( ot_data.data() );
+    R2Y_DETAIL_ yuv_t<S> * p_yuv = reinterpret_cast<R2Y_DETAIL_ yuv_t<S> *>( ot_data.data() );
     GLB_ size_t s = in_w * in_h;
     GLB_ uint16_t u_k, v_k;
     for (GLB_ size_t i = 0; i < s; ++p_yuv)
@@ -774,13 +820,13 @@ typename R2Y_ enable_if<(S == R2Y_ yuv_YUV9 || S == R2Y_ yuv_YVU9)
 
 /* YUV 4:4:4 */
 
-template <R2Y_ supported Tar>
-typename R2Y_ enable_if<(Tar == R2Y_ yuv_NV24 || Tar == R2Y_ yuv_NV42)
+template <R2Y_ supported S>
+typename R2Y_ enable_if<(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42)
 >::type transform_to(R2Y_ scope_block<R2Y_ rgb_t> const & in_data, GLB_ size_t in_w, GLB_ size_t in_h,
                      R2Y_ scope_block<R2Y_ byte_t>      & ot_data)
 {
-    R2Y_ byte_t * p_y = R2Y_DETAIL_ split<Tar, R2Y_ plane_Y>(ot_data.data(), in_w, in_h);
-    R2Y_DETAIL_ uv_t<Tar> p_uv = R2Y_DETAIL_ fill<Tar>(ot_data.data(), in_w, in_h);
+    R2Y_ byte_t * p_y = R2Y_DETAIL_ split<S, R2Y_ plane_Y>(ot_data.data(), in_w, in_h);
+    R2Y_DETAIL_ uv_t<S> p_uv = R2Y_DETAIL_ fill<S>(ot_data.data(), in_w, in_h);
     GLB_ size_t s = in_w * in_h;
     for (GLB_ size_t i = 0; i < s; ++i, ++p_y, ++(p_uv.uv_))
     {
@@ -793,13 +839,13 @@ typename R2Y_ enable_if<(Tar == R2Y_ yuv_NV24 || Tar == R2Y_ yuv_NV42)
 
 /* YUV 4:2:2 */
 
-template <R2Y_ supported Tar>
-typename R2Y_ enable_if<(Tar == R2Y_ yuv_422P)
+template <R2Y_ supported S>
+typename R2Y_ enable_if<(S == R2Y_ yuv_422P)
 >::type transform_to(R2Y_ scope_block<R2Y_ rgb_t> const & in_data, GLB_ size_t in_w, GLB_ size_t in_h,
                      R2Y_ scope_block<R2Y_ byte_t>      & ot_data)
 {
-    R2Y_ byte_t * p_y = R2Y_DETAIL_ split<Tar, R2Y_ plane_Y>(ot_data.data(), in_w, in_h);
-    R2Y_DETAIL_ uv_t<Tar> p_uv = R2Y_DETAIL_ fill<Tar>(ot_data.data(), in_w, in_h);
+    R2Y_ byte_t * p_y = R2Y_DETAIL_ split<S, R2Y_ plane_Y>(ot_data.data(), in_w, in_h);
+    R2Y_DETAIL_ uv_t<S> p_uv = R2Y_DETAIL_ fill<S>(ot_data.data(), in_w, in_h);
     GLB_ size_t s = in_w * in_h;
     GLB_ uint16_t u_k, v_k;
     for (GLB_ size_t i = 0; i < s;)
@@ -816,7 +862,7 @@ typename R2Y_ enable_if<(Tar == R2Y_ yuv_422P)
         } while(0)
 
         R2Y_TRANSFORM_TO_( =);
-        R2Y_TRANSFORM_TO_(+=, R2Y_DETAIL_ set_and_next<Tar>(u_k, v_k, p_uv););
+        R2Y_TRANSFORM_TO_(+=, R2Y_DETAIL_ set_and_next<S>(u_k, v_k, p_uv););
 
 #   pragma pop_macro("R2Y_TRANSFORM_TO_")
     }
@@ -824,14 +870,14 @@ typename R2Y_ enable_if<(Tar == R2Y_ yuv_422P)
 
 /* YUV 4:2:0 */
 
-template <R2Y_ supported Tar>
-typename R2Y_ enable_if<(Tar == R2Y_ yuv_YV12 || Tar == R2Y_ yuv_YU12) ||
-                        (Tar == R2Y_ yuv_NV12 || Tar == R2Y_ yuv_NV21)
+template <R2Y_ supported S>
+typename R2Y_ enable_if<(S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YU12) ||
+                        (S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21)
 >::type transform_to(R2Y_ scope_block<R2Y_ rgb_t> const & in_data, GLB_ size_t in_w, GLB_ size_t in_h,
                      R2Y_ scope_block<R2Y_ byte_t>      & ot_data)
 {
-    R2Y_ byte_t * p_y = R2Y_DETAIL_ split<Tar, R2Y_ plane_Y>(ot_data.data(), in_w, in_h);
-    R2Y_DETAIL_ uv_t<Tar> p_uv = R2Y_DETAIL_ fill<Tar>(ot_data.data(), in_w, in_h);
+    R2Y_ byte_t * p_y = R2Y_DETAIL_ split<S, R2Y_ plane_Y>(ot_data.data(), in_w, in_h);
+    R2Y_DETAIL_ uv_t<S> p_uv = R2Y_DETAIL_ fill<S>(ot_data.data(), in_w, in_h);
     R2Y_ scope_block<GLB_ uint16_t> u_tmp(in_w >> 1), v_tmp(in_w >> 1);
     bool is_h_even = false;
     for (GLB_ size_t i = 0, index = 0; i < in_h; ++i, is_h_even = !is_h_even)
@@ -844,7 +890,7 @@ typename R2Y_ enable_if<(Tar == R2Y_ yuv_YV12 || Tar == R2Y_ yuv_YU12) ||
             GLB_ size_t k = j >> 1;
             if (is_w_even)
             {
-                R2Y_DETAIL_ set_and_next<Tar>(
+                R2Y_DETAIL_ set_and_next<S>(
                     u_tmp[k] += R2Y_ pixel_convert<R2Y_ plane_U>(rgb),
                     v_tmp[k] += R2Y_ pixel_convert<R2Y_ plane_V>(rgb), p_uv);
             }
@@ -875,13 +921,13 @@ typename R2Y_ enable_if<(Tar == R2Y_ yuv_YV12 || Tar == R2Y_ yuv_YU12) ||
 
 /* YUV 4:1:1 */
 
-template <R2Y_ supported Tar>
-typename R2Y_ enable_if<(Tar == R2Y_ yuv_411P)
+template <R2Y_ supported S>
+typename R2Y_ enable_if<(S == R2Y_ yuv_411P)
 >::type transform_to(R2Y_ scope_block<R2Y_ rgb_t> const & in_data, GLB_ size_t in_w, GLB_ size_t in_h,
                      R2Y_ scope_block<R2Y_ byte_t>      & ot_data)
 {
-    R2Y_ byte_t * p_y = R2Y_DETAIL_ split<Tar, R2Y_ plane_Y>(ot_data.data(), in_w, in_h);
-    R2Y_DETAIL_ uv_t<Tar> p_uv = R2Y_DETAIL_ fill<Tar>(ot_data.data(), in_w, in_h);
+    R2Y_ byte_t * p_y = R2Y_DETAIL_ split<S, R2Y_ plane_Y>(ot_data.data(), in_w, in_h);
+    R2Y_DETAIL_ uv_t<S> p_uv = R2Y_DETAIL_ fill<S>(ot_data.data(), in_w, in_h);
     GLB_ size_t s = in_w * in_h;
     GLB_ uint16_t u_k, v_k;
     for (GLB_ size_t i = 0; i < s;)
@@ -900,7 +946,7 @@ typename R2Y_ enable_if<(Tar == R2Y_ yuv_411P)
         R2Y_TRANSFORM_TO_( =);
         R2Y_TRANSFORM_TO_(+=);
         R2Y_TRANSFORM_TO_(+=);
-        R2Y_TRANSFORM_TO_(+=, R2Y_DETAIL_ set_and_next<Tar>(u_k, v_k, p_uv););
+        R2Y_TRANSFORM_TO_(+=, R2Y_DETAIL_ set_and_next<S>(u_k, v_k, p_uv););
 
 #   pragma pop_macro("R2Y_TRANSFORM_TO_")
     }
@@ -908,13 +954,13 @@ typename R2Y_ enable_if<(Tar == R2Y_ yuv_411P)
 
 /* YUV 4:1:0 */
 
-template <R2Y_ supported Tar>
-typename R2Y_ enable_if<(Tar == R2Y_ yuv_YUV9 || Tar == R2Y_ yuv_YVU9)
+template <R2Y_ supported S>
+typename R2Y_ enable_if<(S == R2Y_ yuv_YUV9 || S == R2Y_ yuv_YVU9)
 >::type transform_to(R2Y_ scope_block<R2Y_ rgb_t> const & in_data, GLB_ size_t in_w, GLB_ size_t in_h,
                      R2Y_ scope_block<R2Y_ byte_t>      & ot_data)
 {
-    R2Y_ byte_t * p_y = R2Y_DETAIL_ split<Tar, R2Y_ plane_Y>(ot_data.data(), in_w, in_h);
-    R2Y_DETAIL_ uv_t<Tar> p_uv = R2Y_DETAIL_ fill<Tar>(ot_data.data(), in_w, in_h);
+    R2Y_ byte_t * p_y = R2Y_DETAIL_ split<S, R2Y_ plane_Y>(ot_data.data(), in_w, in_h);
+    R2Y_DETAIL_ uv_t<S> p_uv = R2Y_DETAIL_ fill<S>(ot_data.data(), in_w, in_h);
     R2Y_ scope_block<GLB_ uint16_t> u_tmp(in_w >> 2), v_tmp(in_w >> 2);
     GLB_ uint8_t h_flag = 1;
     for (GLB_ size_t i = 0, index = 0; i < in_h; ++i, ++h_flag)
@@ -963,7 +1009,7 @@ typename R2Y_ enable_if<(Tar == R2Y_ yuv_YUV9 || Tar == R2Y_ yuv_YVU9)
                 switch (w_flag)
                 {
                 case 4:
-                    R2Y_DETAIL_ set_and_next<Tar>(
+                    R2Y_DETAIL_ set_and_next<S>(
                         u_tmp[k] += R2Y_ pixel_convert<R2Y_ plane_U>(rgb),
                         v_tmp[k] += R2Y_ pixel_convert<R2Y_ plane_V>(rgb), p_uv);
                     w_flag = 0;
