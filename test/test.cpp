@@ -2,7 +2,11 @@
 //
 
 #include <stdio.h>
+
+#define R2Y_OLD_API_
 #include "../include/rgb2yuv.hpp"
+
+#include "stopwatch.hpp"
 
 int main(int /*argc*/, char* /*argv*/[])
 {
@@ -13,12 +17,14 @@ int main(int /*argc*/, char* /*argv*/[])
     rgb_format<rgb_888X>((uint8_t*)&xx, 4, &yy);
     printf("%03d %03d %03d\n", yy.r_, yy.g_, yy.b_);
 
+//    yy.r_ = 76; yy.g_ = 255; yy.b_ = 29;
     yuv_t zz;
     zz.y_ = pixel_convert<plane_Y>(yy);
     zz.u_ = pixel_convert<plane_U>(yy);
     zz.v_ = pixel_convert<plane_V>(yy);
     printf("%03d %03d %03d\n", zz.y_, zz.u_, zz.v_);
 
+//    zz.y_ = 255; zz.u_ = zz.v_ = 0;
     yy.r_ = pixel_convert<plane_R>(zz);
     yy.g_ = pixel_convert<plane_G>(zz);
     yy.b_ = pixel_convert<plane_B>(zz);
@@ -61,6 +67,32 @@ int main(int /*argc*/, char* /*argv*/[])
     TEST_(888X, NV42);
     TEST_(888X, YUV9);
     TEST_(888X, YVU9);
+
+    simple::stopwatch<> sw(false);
+    printf("\n");
+#define TEST_SPEED_(FROM, TO, ...)                                                \
+    yuv.move(create_buffer<yuv_##TO>(4, 4));                                      \
+    sw.start();                                                                   \
+    for (int i = 0; i < 2000000; ++i)                                             \
+    {                                                                             \
+        transform##__VA_ARGS__<rgb_##FROM, yuv_##TO>((uint8_t*)data, 4, 4, &yuv); \
+    }                                                                             \
+    printf("%s: %d ms.\n", #TO, static_cast<size_t>(sw.value() * 1000))
+
+    TEST_SPEED_(888X, NV24, _old);
+    TEST_SPEED_(888X, NV24);
+    printf("\n");
+    TEST_SPEED_(888X, YUY2, _old);
+    TEST_SPEED_(888X, YUY2);
+    printf("\n");
+    TEST_SPEED_(888X, YUV9, _old);
+    TEST_SPEED_(888X, YUV9);
+    printf("\n");
+    TEST_SPEED_(888X, NV12, _old);
+    TEST_SPEED_(888X, NV12);
+    printf("\n");
+    TEST_SPEED_(888X, Y41P, _old);
+    TEST_SPEED_(888X, Y41P);
 
     return 0;
 }
