@@ -19,7 +19,7 @@ struct convertor
 {
     static const GLB_ int32_t MAX = static_cast<GLB_ uint8_t>(~0);
 
-    static GLB_ uint8_t clip(GLB_ int32_t value)
+    R2Y_FORCE_INLINE_ static GLB_ uint8_t clip(GLB_ int32_t value)
     {
         return static_cast<GLB_ uint8_t>( (value < 0) ? 0 :
                                           (value > convertor::MAX) ? convertor::MAX : value );
@@ -36,27 +36,27 @@ struct convertor
             tb_[2][i] += matrix[3];
     }
 
-    GLB_ int32_t convert(R2Y_ pixel_t const & in_p) const
+    R2Y_FORCE_INLINE_ GLB_ int32_t convert(R2Y_ pixel_t const & in_p) const
     {
         return (tb_[0][in_p.a_] + tb_[1][in_p.b_] + tb_[2][in_p.c_]) >> 8;
     }
 
     template <bool NeedClip>
-    typename R2Y_ enable_if<(NeedClip == true),
+    R2Y_FORCE_INLINE_ typename R2Y_ enable_if<(NeedClip == true),
     GLB_ uint8_t>::type convert(R2Y_ pixel_t const & in_p) const
     {
         return clip(this->convert(in_p));
     }
 
     template <bool NeedClip>
-    typename R2Y_ enable_if<(NeedClip == false),
+    R2Y_FORCE_INLINE_ typename R2Y_ enable_if<(NeedClip == false),
     GLB_ uint8_t>::type convert(R2Y_ pixel_t const & in_p) const
     {
         return this->convert(in_p);
     }
 };
 
-inline R2Y_ convertor const * factor_matrix(void)
+R2Y_FORCE_INLINE_ R2Y_ convertor const * factor_matrix(void)
 {
     /*
      * The factors for converting between YUV and RGB
@@ -88,26 +88,26 @@ inline R2Y_ convertor const * factor_matrix(void)
 }
 
 template <R2Y_ plane_type P>
-GLB_ uint8_t pixel_convert(R2Y_ pixel_t const & in_p)
+R2Y_FORCE_INLINE_ GLB_ uint8_t pixel_convert(R2Y_ pixel_t const & in_p)
 {
     return factor_matrix()[P].convert<R2Y_ is_rgb_plane<P>::value>(in_p);
 }
 
 template <R2Y_ plane_type P>
-typename R2Y_ enable_if<R2Y_ is_yuv_plane<P>::value,
+R2Y_FORCE_INLINE_ typename R2Y_ enable_if<R2Y_ is_yuv_plane<P>::value,
 GLB_ uint8_t>::type pixel_convert(R2Y_ rgb_t const & in_p)
 {
     return pixel_convert<P>(R2Y_ pixel_t::cast(in_p));
 }
 
 template <R2Y_ plane_type P>
-typename R2Y_ enable_if<R2Y_ is_rgb_plane<P>::value,
+R2Y_FORCE_INLINE_ typename R2Y_ enable_if<R2Y_ is_rgb_plane<P>::value,
 GLB_ uint8_t>::type pixel_convert(R2Y_ yuv_t const & in_p)
 {
     return pixel_convert<P>(R2Y_ pixel_t::cast(in_p));
 }
 
-R2Y_ yuv_t pixel_convert(R2Y_ rgb_t const & in_p)
+R2Y_FORCE_INLINE_ R2Y_ yuv_t pixel_convert(R2Y_ rgb_t const & in_p)
 {
     R2Y_ yuv_t ret =
     {
@@ -118,7 +118,7 @@ R2Y_ yuv_t pixel_convert(R2Y_ rgb_t const & in_p)
     return ret;
 }
 
-R2Y_ rgb_t pixel_convert(R2Y_ yuv_t const & in_p)
+R2Y_FORCE_INLINE_ R2Y_ rgb_t pixel_convert(R2Y_ yuv_t const & in_p)
 {
     R2Y_ rgb_t ret =
     {

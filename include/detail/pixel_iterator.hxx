@@ -13,18 +13,6 @@ namespace detail_iterator_ {
 #undef  R2Y_DETAIL_
 #define R2Y_DETAIL_ R2Y_ detail_iterator_::
 
-#pragma push_macro("R2Y_SET_AND_NEXT_")
-#undef  R2Y_SET_AND_NEXT_
-#define R2Y_SET_AND_NEXT_(I, YI, OP, ...) \
-    case I:                               \
-    {                                     \
-        YI   = rhs.y_;                    \
-        u_k_ OP rhs.u_;                   \
-        v_k_ OP rhs.v_;                   \
-        __VA_ARGS__                       \
-    }                                     \
-    break
-
 template <R2Y_ supported T, R2Y_ supported S = T>
 class impl_;
 
@@ -42,31 +30,31 @@ template <R2Y_ supported S> class impl_<R2Y_ yuv_YUY2, S>
 {
     typedef R2Y_DETAIL_ packed_yuv_t<S> p_t;
 
-    p_t *         yuv_;
-    bool          flag_;
-    GLB_ uint16_t u_k_, v_k_; // No need initialization
+    p_t * yuv_;
 
 public:
+    enum { iterator_size = 2, is_block = 0 };
+
     impl_(R2Y_ byte_t * in_data, GLB_ size_t /*in_w*/, GLB_ size_t /*in_h*/)
-        : yuv_(reinterpret_cast<p_t *>(in_data)), flag_(false)
+        : yuv_(reinterpret_cast<p_t *>(in_data))
     {}
 
-    void set_and_next(const R2Y_ yuv_t & rhs)
+    void set_and_next(R2Y_ yuv_t const (& rhs)[2])
     {
-        if (flag_)
+        GLB_ uint16_t u_k, v_k;
         {
-            yuv_->y1_ = rhs.y_;
-            yuv_->cb_ = (u_k_ + rhs.u_) >> 1;
-            yuv_->cr_ = (v_k_ + rhs.v_) >> 1;
-            ++yuv_;
+            R2Y_ yuv_t const & pix = rhs[0];
+            yuv_->y0_ = pix.y_;
+            u_k       = pix.u_;
+            v_k       = pix.v_;
         }
-        else
         {
-            yuv_->y0_ = rhs.y_;
-            u_k_      = rhs.u_;
-            v_k_      = rhs.v_;
+            R2Y_ yuv_t const & pix = rhs[1];
+            yuv_->y1_ = pix.y_;
+            yuv_->cb_ = (u_k + pix.u_) >> 1;
+            yuv_->cr_ = (v_k + pix.v_) >> 1;
         }
-        flag_ = !flag_;
+        ++yuv_;
     }
 };
 
@@ -107,28 +95,40 @@ template <R2Y_ supported S> class impl_<R2Y_ yuv_Y41P, S>
 {
     typedef R2Y_DETAIL_ packed_yuv_t<S> p_t;
 
-    p_t *         yuv_;
-    GLB_ uint8_t  flag_;
-    GLB_ uint16_t u_k_, v_k_; // No need initialization
+    p_t * yuv_;
 
 public:
+    enum { iterator_size = 8, is_block = 0 };
+
     impl_(R2Y_ byte_t * in_data, GLB_ size_t /*in_w*/, GLB_ size_t /*in_h*/)
-        : yuv_(reinterpret_cast<p_t *>(in_data)), flag_(0)
+        : yuv_(reinterpret_cast<p_t *>(in_data))
     {}
 
-    void set_and_next(const R2Y_ yuv_t & rhs)
+    void set_and_next(R2Y_ yuv_t const (& rhs)[8])
     {
-        switch (flag_)
-        {
-        R2Y_SET_AND_NEXT_(0, yuv_->y0_, = , ++flag_;);
-        R2Y_SET_AND_NEXT_(1, yuv_->y1_, +=, ++flag_;);
-        R2Y_SET_AND_NEXT_(2, yuv_->y2_, +=, ++flag_;);
-        R2Y_SET_AND_NEXT_(3, yuv_->y3_, +=, yuv_->u0_ = u_k_ >> 2; yuv_->v0_ = v_k_ >> 2; ++flag_;);
-        R2Y_SET_AND_NEXT_(4, yuv_->y4_, = , ++flag_;);
-        R2Y_SET_AND_NEXT_(5, yuv_->y5_, +=, ++flag_;);
-        R2Y_SET_AND_NEXT_(6, yuv_->y6_, +=, ++flag_;);
-        R2Y_SET_AND_NEXT_(7, yuv_->y7_, +=, yuv_->u1_ = u_k_ >> 2; yuv_->v1_ = v_k_ >> 2; flag_ = 0; ++yuv_;);
-        }
+        GLB_ uint16_t u_k, v_k;
+
+#   pragma push_macro("R2Y_SET_AND_NEXT_")
+#   undef  R2Y_SET_AND_NEXT_
+#   define R2Y_SET_AND_NEXT_(I, OP, ...) do  \
+        {                                    \
+            R2Y_ yuv_t const & pix = rhs[I]; \
+            yuv_->y##I##_ = pix.y_;          \
+            u_k          OP pix.u_;          \
+            v_k          OP pix.v_;          \
+            __VA_ARGS__                      \
+        } while(0)
+
+        R2Y_SET_AND_NEXT_(0, = );
+        R2Y_SET_AND_NEXT_(1, +=);
+        R2Y_SET_AND_NEXT_(2, +=);
+        R2Y_SET_AND_NEXT_(3, +=, yuv_->u0_ = u_k >> 2; yuv_->v0_ = v_k >> 2;);
+        R2Y_SET_AND_NEXT_(4, = );
+        R2Y_SET_AND_NEXT_(5, +=);
+        R2Y_SET_AND_NEXT_(6, +=);
+        R2Y_SET_AND_NEXT_(7, +=, yuv_->u1_ = u_k >> 2; yuv_->v1_ = v_k >> 2; ++yuv_;);
+
+#   pragma pop_macro("R2Y_SET_AND_NEXT_")
     }
 };
 
@@ -244,11 +244,13 @@ template <R2Y_ supported S> class impl_<R2Y_ yuv_NV24, S> : yuv_planar<S>
     uv_t          uv_;
 
 public:
+    enum { iterator_size = 1, is_block = 0 };
+
     impl_(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
         : yuv_planar<S>(y_, uv_, in_data, in_w, in_h)
     {}
 
-    void set_and_next(const R2Y_ yuv_t & rhs)
+    void set_and_next(R2Y_ yuv_t const & rhs)
     {
         (*y_) = rhs.y_; ++y_;
         R2Y_DETAIL_ set_and_next(rhs.u_, rhs.v_, uv_);
@@ -271,29 +273,29 @@ template <R2Y_ supported S> class impl_<R2Y_ yuv_422P, S> : yuv_planar<S>
 
     R2Y_ byte_t * y_;
     uv_t          uv_;
-    bool          flag_;
-    GLB_ uint16_t u_k_, v_k_; // No need initialization
 
 public:
+    enum { iterator_size = 2, is_block = 0 };
+
     impl_(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
         : yuv_planar<S>(y_, uv_, in_data, in_w, in_h)
-        , flag_(false)
     {}
 
-    void set_and_next(const R2Y_ yuv_t & rhs)
+    void set_and_next(R2Y_ yuv_t const (& rhs)[2])
     {
-        (*y_) = rhs.y_; ++y_;
-        if (flag_)
+        GLB_ uint16_t u_k, v_k;
         {
-            R2Y_DETAIL_ set_and_next((u_k_ + rhs.u_) >> 1, 
-                                     (v_k_ + rhs.v_) >> 1, uv_);
+            R2Y_ yuv_t const & pix = rhs[0];
+            (*y_) = pix.y_; ++y_;
+            u_k   = pix.u_;
+            v_k   = pix.v_;
         }
-        else
         {
-            u_k_ = rhs.u_;
-            v_k_ = rhs.v_;
+            R2Y_ yuv_t const & pix = rhs[1];
+            (*y_) = pix.y_; ++y_;
+            R2Y_DETAIL_ set_and_next((u_k + pix.u_) >> 1,
+                                     (v_k + pix.v_) >> 1, uv_);
         }
-        flag_ = !flag_;
     }
 };
 
@@ -303,45 +305,33 @@ template <R2Y_ supported S> class impl_<R2Y_ yuv_YV12, S> : yuv_planar<S>
 {
     typedef R2Y_DETAIL_ planar_uv_t<S> uv_t;
 
-    R2Y_ byte_t * y_;
+    R2Y_ byte_t * y_, * y1_, * ye_;
     uv_t          uv_;
-    GLB_ size_t   k_;
-    bool          w_flag_, h_flag_;
-    R2Y_ scope_block<GLB_ uint16_t> u_tmp_, v_tmp_;
+    GLB_ size_t   w_;
 
 public:
+    enum { iterator_size = 2, is_block = 1 };
+
     impl_(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
         : yuv_planar<S>(y_, uv_, in_data, in_w, in_h)
-        , k_(0), w_flag_(false), h_flag_(false)
-        , u_tmp_(in_w >> 1), v_tmp_(in_w >> 1)
+        , y1_(y_ + in_w), ye_(y1_)
+        , w_(in_w)
     {}
 
-    void set_and_next(const R2Y_ yuv_t & rhs)
+    void set_and_next(R2Y_ yuv_t const (& rhs)[4])
     {
-        (*y_) = rhs.y_; ++y_;
-        GLB_ size_t i = k_ >> 1;
-        if (h_flag_ && w_flag_)
+        (*y_)  = rhs[0].y_; ++y_;
+        (*y_)  = rhs[1].y_; ++y_;
+        (*y1_) = rhs[2].y_; ++y1_;
+        (*y1_) = rhs[3].y_; ++y1_;
+        if (y_ == ye_)
         {
-            R2Y_DETAIL_ set_and_next((u_tmp_[i] + rhs.u_) >> 2, 
-                                     (v_tmp_[i] + rhs.v_) >> 2, uv_);
+            y_ = y1_;
+            y1_ += w_;
+            ye_ = y1_;
         }
-        else if (h_flag_ || w_flag_)
-        {
-            u_tmp_[i] += rhs.u_;
-            v_tmp_[i] += rhs.v_;
-        }
-        else
-        {
-            u_tmp_[i] = rhs.u_;
-            v_tmp_[i] = rhs.v_;
-        }
-        ++k_;
-        w_flag_ = !w_flag_;
-        if (k_ >= u_tmp_.size())
-        {
-            k_ = 0;
-            h_flag_ = !h_flag_;
-        }
+        R2Y_DETAIL_ set_and_next((rhs[0].u_ + rhs[1].u_ + rhs[2].u_ + rhs[3].u_) >> 2,
+                                 (rhs[0].v_ + rhs[1].v_ + rhs[2].v_ + rhs[3].v_) >> 2, uv_);
     }
 };
 
@@ -377,24 +367,35 @@ template <R2Y_ supported S> class impl_<R2Y_ yuv_411P, S> : yuv_planar<S>
 
     R2Y_ byte_t * y_;
     uv_t          uv_;
-    GLB_ uint8_t  flag_;
-    GLB_ uint16_t u_k_, v_k_; // No need initialization
 
 public:
+    enum { iterator_size = 4, is_block = 0 };
+
     impl_(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
         : yuv_planar<S>(y_, uv_, in_data, in_w, in_h)
-        , flag_(0)
     {}
 
-    void set_and_next(const R2Y_ yuv_t & rhs)
+    void set_and_next(R2Y_ yuv_t const (& rhs)[4])
     {
-        switch (flag_)
-        {
-        R2Y_SET_AND_NEXT_(0, (*y_),  =, ++y_; ++flag_;);
-        R2Y_SET_AND_NEXT_(1, (*y_), +=, ++y_; ++flag_;);
-        R2Y_SET_AND_NEXT_(2, (*y_), +=, ++y_; ++flag_;);
-        R2Y_SET_AND_NEXT_(3, (*y_), +=, ++y_; R2Y_DETAIL_ set_and_next<S>(u_k_ >> 2, v_k_ >> 2, uv_); flag_ = 0;);
-        }
+        GLB_ uint16_t u_k, v_k;
+
+#   pragma push_macro("R2Y_SET_AND_NEXT_")
+#   undef  R2Y_SET_AND_NEXT_
+#   define R2Y_SET_AND_NEXT_(I, OP, ...) do  \
+        {                                    \
+            R2Y_ yuv_t const & pix = rhs[I]; \
+            (*y_) = pix.y_; ++y_;            \
+            u_k  OP pix.u_;                  \
+            v_k  OP pix.v_;                  \
+            __VA_ARGS__                      \
+        } while(0)
+
+        R2Y_SET_AND_NEXT_(0, = );
+        R2Y_SET_AND_NEXT_(1, +=);
+        R2Y_SET_AND_NEXT_(2, +=);
+        R2Y_SET_AND_NEXT_(3, +=, R2Y_DETAIL_ set_and_next<S>(u_k >> 2, v_k >> 2, uv_););
+
+#   pragma pop_macro("R2Y_SET_AND_NEXT_")
     }
 };
 
@@ -404,52 +405,42 @@ template <R2Y_ supported S> class impl_<R2Y_ yuv_YUV9, S> : yuv_planar<S>
 {
     typedef R2Y_DETAIL_ planar_uv_t<S> uv_t;
 
-    R2Y_ byte_t * y_;
+    R2Y_ byte_t * y_, * y1_, * y2_, * y3_, * ye_;
     uv_t          uv_;
-    GLB_ size_t   k_;
-    GLB_ uint8_t  w_flag_, h_flag_;
-    R2Y_ scope_block<GLB_ uint16_t> u_tmp_, v_tmp_;
+    GLB_ size_t   w_;
 
 public:
+    enum { iterator_size = 4, is_block = 1 };
+
     impl_(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
         : yuv_planar<S>(y_, uv_, in_data, in_w, in_h)
-        , k_(0), w_flag_(0), h_flag_(0)
-        , u_tmp_(in_w >> 2), v_tmp_(in_w >> 2)
+        , y1_(y_ + in_w), y2_(y1_ + in_w), y3_(y2_ + in_w), ye_(y1_)
+        , w_(in_w)
     {}
 
-    void set_and_next(const R2Y_ yuv_t & rhs)
+    void set_and_next(R2Y_ yuv_t const (& rhs)[16])
     {
-        (*y_) = rhs.y_; ++y_;
-        GLB_ size_t i = k_ >> 2;
-        if (h_flag_ == 0 && w_flag_ == 0)
+        int i = 0;
+        for (; i < 4 ; ++i, ++y_ ) (*y_)  = rhs[i].y_;
+        for (; i < 8 ; ++i, ++y1_) (*y1_) = rhs[i].y_;
+        for (; i < 12; ++i, ++y2_) (*y2_) = rhs[i].y_;
+        for (; i < 16; ++i, ++y3_) (*y3_) = rhs[i].y_;
+        if (y_ == ye_)
         {
-            u_tmp_[i] = rhs.u_;
-            v_tmp_[i] = rhs.v_;
+            y_  = y3_;
+            y1_ = y_  + w_;
+            y2_ = y1_ + w_;
+            y3_ = y2_ + w_;
+            ye_ = y1_;
         }
-        else if (h_flag_ < 3 || w_flag_ < 3) // 0, 1, 2
-        {
-            u_tmp_[i] += rhs.u_;
-            v_tmp_[i] += rhs.v_;
-        }
-        else // h_flag_ == 3 && w_flag_ == 3
-        {
-            assert(h_flag_ == 3 && w_flag_ == 3);
-            R2Y_DETAIL_ set_and_next((u_tmp_[i] + rhs.u_) >> 4,
-                                     (v_tmp_[i] + rhs.v_) >> 4, uv_);
-        }
-        if (w_flag_ == 3)
-            w_flag_ = 0;
-        else
-            ++w_flag_;
-        ++k_;
-        if (k_ >= (u_tmp_.size() << 1))
-        {
-            k_ = 0;
-            if (h_flag_ == 3)
-                h_flag_ = 0;
-            else
-                ++h_flag_;
-        }
+        R2Y_DETAIL_ set_and_next((rhs[0 ].u_ + rhs[1 ].u_ + rhs[2 ].u_ + rhs[3 ].u_ +
+                                  rhs[4 ].u_ + rhs[5 ].u_ + rhs[6 ].u_ + rhs[7 ].u_ +
+                                  rhs[8 ].u_ + rhs[9 ].u_ + rhs[10].u_ + rhs[11].u_ +
+                                  rhs[12].u_ + rhs[13].u_ + rhs[14].u_ + rhs[15].u_) >> 4,
+                                 (rhs[0 ].v_ + rhs[1 ].v_ + rhs[2 ].v_ + rhs[3 ].v_ +
+                                  rhs[4 ].v_ + rhs[5 ].v_ + rhs[6 ].v_ + rhs[7 ].v_ +
+                                  rhs[8 ].v_ + rhs[9 ].v_ + rhs[10].v_ + rhs[11].v_ +
+                                  rhs[12].v_ + rhs[13].v_ + rhs[14].v_ + rhs[15].v_) >> 4, uv_);
     }
 };
 
@@ -461,7 +452,6 @@ public:
     {}
 };
 
-#pragma pop_macro("R2Y_SET_AND_NEXT_")
 #pragma pop_macro("R2Y_DETAIL_")
 
 } // namespace detail_iterator_

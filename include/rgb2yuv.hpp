@@ -12,40 +12,7 @@
 #include <new>       // placement new, std::nothrow
 #include <algorithm> // std::swap
 
-////////////////////////////////////////////////////////////////
-/// Predefine functional macros
-////////////////////////////////////////////////////////////////
-
-#pragma push_macro("GLB_")
-#undef  GLB_
-#define GLB_ ::
-
-#pragma push_macro("STD_")
-#undef  STD_
-#define STD_ GLB_ std::
-
-#pragma push_macro("R2Y_NAMESPACE_")
-#undef  R2Y_NAMESPACE_
-#define R2Y_NAMESPACE_ r2y
-
-#pragma push_macro("R2Y_")
-#undef  R2Y_
-#define R2Y_ GLB_ R2Y_NAMESPACE_ ::
-
-#pragma push_macro("R2Y_ALLOC_")
-#ifndef R2Y_ALLOC_
-#define R2Y_ALLOC_ R2Y_ allocator
-#endif // R2Y_ALLOC_
-
-#pragma push_macro("R2Y_UNUSED_")
-#undef  R2Y_UNUSED_
-#if defined(_MSC_VER)
-#   define R2Y_UNUSED_ __pragma(warning(suppress:4100))
-#elif defined(__GNUC__)
-#   define R2Y_UNUSED_ __attribute__((__unused__))
-#else
-#   define R2Y_UNUSED_
-#endif
+#include "detail/predefine.hxx"
 
 namespace R2Y_NAMESPACE_ {
 
@@ -67,16 +34,37 @@ namespace R2Y_NAMESPACE_ {
 template <R2Y_ supported S>
 struct do_convert_t
 {
+    enum
+    {
+        iterator_size = R2Y_ iterator<S>::iterator_size,
+        is_block      = R2Y_ iterator<S>::is_block
+    };
+
     R2Y_ iterator<S> iter_;
 
     do_convert_t(R2Y_ scope_block<R2Y_ byte_t> * ot_data, GLB_ size_t in_w, GLB_ size_t in_h)
         : iter_(ot_data->data(), in_w, in_h)
     {}
 
+    template <typename T, int> struct convert_pixel_t;
+    template <int Dummy>       struct convert_pixel_t<R2Y_ rgb_t, Dummy> { typedef R2Y_ yuv_t type; };
+    template <int Dummy>       struct convert_pixel_t<R2Y_ yuv_t, Dummy> { typedef R2Y_ rgb_t type; };
+
     template <typename T>
-    void operator()(T const & pixel)
+    void operator()(T const & pix)
     {
-        iter_.set_and_next(pixel_convert(pixel));
+        iter_.set_and_next(pixel_convert(pix));
+    }
+
+    template <typename T, GLB_ size_t N>
+    void operator()(T const (& pix)[N])
+    {
+        typename convert_pixel_t<T, 0>::type c_pix[N];
+        for (GLB_ size_t i = 0; i < N; ++i)
+        {
+            c_pix[i] = pixel_convert(pix[i]);
+        }
+        iter_.set_and_next(c_pix);
     }
 };
 
@@ -95,15 +83,6 @@ typename R2Y_ enable_if<(In != Ot)
     
 } // namespace R2Y_NAMESPACE_
 
-////////////////////////////////////////////////////////////////
-/// Pop previous definition of used macros
-////////////////////////////////////////////////////////////////
-
-#pragma pop_macro("R2Y_UNUSED_")
-#pragma pop_macro("R2Y_ALLOC_")
-#pragma pop_macro("R2Y_")
-#pragma pop_macro("R2Y_NAMESPACE_")
-#pragma pop_macro("STD_")
-#pragma pop_macro("GLB_")
+#include "detail/undefine.hxx"
 
 #endif // RGB2YUV_HPP__

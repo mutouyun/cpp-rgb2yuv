@@ -19,6 +19,8 @@ SOURCES += \
     ../test/test.cpp
 
 HEADERS += \
+    ../include/detail/predefine.hxx \
+    ../include/detail/undefine.hxx \
     ../include/detail/basic_concept.hxx \
     ../include/detail/scope_block.hxx \
     ../include/detail/buffer_creator.hxx \

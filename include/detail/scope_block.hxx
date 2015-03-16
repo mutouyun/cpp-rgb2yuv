@@ -55,6 +55,11 @@ public:
      * The copy constructor always taking ownership 
      * from the other scope_block object, just like std::auto_ptr.
      */
+    scope_block(scope_block const & rhs)
+        : block_(NULL), size_(0), trust_(false)
+    {
+        this->move(rhs);
+    }
     template <typename U>
     scope_block(scope_block<U, AllocT> const & rhs)
         : block_(NULL), size_(0), trust_(false)
