@@ -47,55 +47,55 @@ int main(int /*argc*/, char* /*argv*/[])
         printf("%02X ", rgb[i]);
     printf("\n");
 
-#define TEST_(FROM, TO)                                               \
+#define TEST_(TO)                                                     \
     yuv.move( create_buffer<yuv_##TO>(4, 4) );                        \
-    transform<r2y::rgb_888, yuv_##TO>((uint8_t*)rgb_888, 4, 4, &yuv);      \
+    transform<r2y::rgb_888, yuv_##TO>((uint8_t*)rgb_888, 4, 4, &yuv); \
     printf("-> %s: ", #TO);                                           \
     for (size_t i = 0; i < yuv.count(); ++i) printf("%02X ", yuv[i]); \
     printf("\n")
 
-    TEST_(888X, YV12);
-    TEST_(888X, YU12);
-    TEST_(888X, NV12);
-    TEST_(888X, NV21);
-    TEST_(888X, YUY2);
-    TEST_(888X, VYUY);
-    TEST_(888X, Y41P);
-    TEST_(888X, 411P);
-    TEST_(888X, 422P);
-    TEST_(888X, NV24);
-    TEST_(888X, NV42);
-    TEST_(888X, YUV9);
-    TEST_(888X, YVU9);
+    TEST_(YV12);
+    TEST_(YU12);
+    TEST_(NV12);
+    TEST_(NV21);
+    TEST_(YUY2);
+    TEST_(VYUY);
+    TEST_(Y41P);
+    TEST_(411P);
+    TEST_(422P);
+    TEST_(NV24);
+    TEST_(NV42);
+    TEST_(YUV9);
+    TEST_(YVU9);
 
     simple::stopwatch<> sw(false);
     printf("\n");
-#define TEST_SPEED_(FROM, TO, ...)                                                \
-    yuv.move(create_buffer<yuv_##TO>(4, 4));                                      \
-    sw.start();                                                                   \
-    for (int i = 0; i < 5000000; ++i)                                             \
-    {                                                                             \
-        transform##__VA_ARGS__<rgb_##FROM, yuv_##TO>((uint8_t*)data, 4, 4, &yuv); \
-    }                                                                             \
-    printf("%s: %d ms. %s\n", #TO, static_cast<size_t>(sw.value() * 1000), #__VA_ARGS__)
+#define TEST_SPEED_(TO, ...)                                                    \
+    yuv.move(create_buffer<yuv_##TO>(4, 4));                                    \
+    sw.start();                                                                 \
+    for (int i = 0; i < 2000000; ++i)                                           \
+    {                                                                           \
+        transform##__VA_ARGS__<rgb_888X, yuv_##TO>((uint8_t*)data, 4, 4, &yuv); \
+    }                                                                           \
+    printf("%s: %d ms. %s\n", #TO, static_cast<size_t>(sw.value() * 1000), ""#__VA_ARGS__)
 
-    TEST_SPEED_(888X, YUV9, _old);
-    TEST_SPEED_(888X, YUV9);
+    TEST_SPEED_(YUV9, _old);
+    TEST_SPEED_(YUV9);
     printf("\n");
-    TEST_SPEED_(888X, NV12, _old);
-    TEST_SPEED_(888X, NV12);
+    TEST_SPEED_(NV12, _old);
+    TEST_SPEED_(NV12);
     printf("\n");
-    TEST_SPEED_(888X, NV24, _old);
-    TEST_SPEED_(888X, NV24);
+    TEST_SPEED_(NV24, _old);
+    TEST_SPEED_(NV24);
     printf("\n");
-    TEST_SPEED_(888X, YUY2, _old);
-    TEST_SPEED_(888X, YUY2);
+    TEST_SPEED_(YUY2, _old);
+    TEST_SPEED_(YUY2);
     printf("\n");
-    TEST_SPEED_(888X, 411P, _old);
-    TEST_SPEED_(888X, 411P);
+    TEST_SPEED_(411P, _old);
+    TEST_SPEED_(411P);
     printf("\n");
-    TEST_SPEED_(888X, Y41P, _old);
-    TEST_SPEED_(888X, Y41P);
+    TEST_SPEED_(Y41P, _old);
+    TEST_SPEED_(Y41P);
 
     return 0;
 }

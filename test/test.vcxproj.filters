@@ -42,6 +42,12 @@
     <ClInclude Include="..\include\rgb2yuv_old.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\detail\predefine.hxx">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="..\include\detail\undefine.hxx">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="test.cpp">
