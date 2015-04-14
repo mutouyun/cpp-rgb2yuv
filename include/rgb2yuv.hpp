@@ -6,11 +6,12 @@
 #ifndef RGB2YUV_HPP__
 #define RGB2YUV_HPP__
 
-#include <stddef.h>  // size_t, ...
-#include <stdint.h>  // uint8_t, ...
-#include <assert.h>  // assert
-#include <new>       // placement new, std::nothrow
-#include <algorithm> // std::swap
+#include <stddef.h>     // size_t, ...
+#include <stdint.h>     // uint8_t, ...
+#include <assert.h>     // assert
+#include <new>          // placement new, std::nothrow
+#include <utility>      // std::swap, std::forward, std::move
+#include <type_traits>  // std::enable_if
 
 #include "detail/predefine.hxx"
 
@@ -22,10 +23,6 @@ namespace R2Y_NAMESPACE_ {
 #include "detail/pixel_walker.hxx"
 #include "detail/pixel_iterator.hxx"
 #include "detail/pixel_convertor.hxx"
-
-#ifdef R2Y_OLD_API_
-#include "rgb2yuv_old.hpp"
-#endif/*R2Y_OLD_API_*/
 
 ////////////////////////////////////////////////////////////////
 /// Transforming between RGB & YUV/YCbCr blocks
@@ -39,8 +36,6 @@ struct do_convert_t
         iterator_size = R2Y_ iterator<S>::iterator_size,
         is_block      = R2Y_ iterator<S>::is_block
     };
-
-    R2Y_ iterator<S> iter_;
 
     do_convert_t(R2Y_ scope_block<R2Y_ byte_t> * ot_data, GLB_ size_t in_w, GLB_ size_t in_h)
         : iter_(ot_data->data(), in_w, in_h)
@@ -66,10 +61,13 @@ struct do_convert_t
         }
         iter_.set_and_next(c_pix);
     }
+
+private:
+    R2Y_ iterator<S> iter_;
 };
 
 template <R2Y_ supported In, R2Y_ supported Ot>
-typename R2Y_ enable_if<(In != Ot)
+typename STD_ enable_if<(In != Ot)
 >::type transform(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h,
                   R2Y_ scope_block<R2Y_ byte_t> * ot_data)
 {
@@ -77,8 +75,7 @@ typename R2Y_ enable_if<(In != Ot)
     assert(ot_data != NULL);
     assert(in_w > 0 && in_h > 0);
 
-    R2Y_ do_convert_t<Ot> dc(ot_data, in_w, in_h);
-    R2Y_ pixel_foreach<In>(in_data, in_w, in_h, dc);
+    R2Y_ pixel_foreach<In>(in_data, in_w, in_h, R2Y_ do_convert_t<Ot>{ ot_data, in_w, in_h });
 }
     
 } // namespace R2Y_NAMESPACE_

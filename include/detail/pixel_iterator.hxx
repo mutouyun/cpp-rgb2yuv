@@ -13,6 +13,16 @@ namespace detail_iterator_ {
 #undef  R2Y_DETAIL_
 #define R2Y_DETAIL_ R2Y_ detail_iterator_::
 
+#pragma push_macro("R2Y_DETAIL_INHERIT_")
+#undef  R2Y_DETAIL_INHERIT_
+#define R2Y_DETAIL_INHERIT_(SP, P)                    \
+    template <R2Y_ supported S>                       \
+    class impl_<R2Y_ SP, S> : public impl_<R2Y_ P, S> \
+    {                                                 \
+        public:                                       \
+            using impl_<R2Y_ P, S>::impl_;            \
+    };
+
 template <R2Y_ supported T, R2Y_ supported S = T>
 class impl_;
 
@@ -58,29 +68,9 @@ public:
     }
 };
 
-template <R2Y_ supported S> class impl_<R2Y_ yuv_YVYU, S> : public impl_<R2Y_ yuv_YUY2, S>
-{
-public:
-    impl_(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
-        : impl_<R2Y_ yuv_YUY2, S>(in_data, in_w, in_h)
-    {}
-};
-
-template <R2Y_ supported S> class impl_<R2Y_ yuv_UYVY, S> : public impl_<R2Y_ yuv_YUY2, S>
-{
-public:
-    impl_(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
-        : impl_<R2Y_ yuv_YUY2, S>(in_data, in_w, in_h)
-    {}
-};
-
-template <R2Y_ supported S> class impl_<R2Y_ yuv_VYUY, S> : public impl_<R2Y_ yuv_YUY2, S>
-{
-public:
-    impl_(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
-        : impl_<R2Y_ yuv_YUY2, S>(in_data, in_w, in_h)
-    {}
-};
+R2Y_DETAIL_INHERIT_(yuv_YVYU, yuv_YUY2)
+R2Y_DETAIL_INHERIT_(yuv_UYVY, yuv_YUY2)
+R2Y_DETAIL_INHERIT_(yuv_VYUY, yuv_YUY2)
 
 /* 4:1:1 */
 
@@ -135,91 +125,89 @@ public:
 /* YUV Planar */
 
 template <R2Y_ supported> struct planar_uv_t                { GLB_ uint8_t * cb_, *cr_; };
-template <>               struct planar_uv_t<R2Y_ yuv_NV24> { struct inner { GLB_ uint8_t cb_, cr_; } * uv_; };
-template <>               struct planar_uv_t<R2Y_ yuv_NV42> { struct inner { GLB_ uint8_t cr_, cb_; } * uv_; };
-template <>               struct planar_uv_t<R2Y_ yuv_NV12> { struct inner { GLB_ uint8_t cb_, cr_; } * uv_; };
-template <>               struct planar_uv_t<R2Y_ yuv_NV21> { struct inner { GLB_ uint8_t cr_, cb_; } * uv_; };
+template <>               struct planar_uv_t<R2Y_ yuv_NV24> { struct { GLB_ uint8_t cb_, cr_; } * uv_; };
+template <>               struct planar_uv_t<R2Y_ yuv_NV42> { struct { GLB_ uint8_t cr_, cb_; } * uv_; };
+template <>               struct planar_uv_t<R2Y_ yuv_NV12> { struct { GLB_ uint8_t cb_, cr_; } * uv_; };
+template <>               struct planar_uv_t<R2Y_ yuv_NV21> { struct { GLB_ uint8_t cr_, cb_; } * uv_; };
 
 template <R2Y_ supported S>
-typename R2Y_ enable_if<!(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21)
->::type set_and_next(GLB_ uint8_t in_u, GLB_ uint8_t in_v, R2Y_DETAIL_ planar_uv_t<S> & ot_uv)
+STD_ enable_if_t<!(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21)>
+    set_and_next(GLB_ uint8_t in_u, GLB_ uint8_t in_v, R2Y_DETAIL_ planar_uv_t<S> & ot_uv)
 {
     (*(ot_uv.cb_)) = in_u; ++(ot_uv.cb_);
     (*(ot_uv.cr_)) = in_v; ++(ot_uv.cr_);
 }
 
 template <R2Y_ supported S>
-typename R2Y_ enable_if<(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21)
->::type set_and_next(GLB_ uint8_t in_u, GLB_ uint8_t in_v, R2Y_DETAIL_ planar_uv_t<S> & ot_uv)
+STD_ enable_if_t<(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21)>
+    set_and_next(GLB_ uint8_t in_u, GLB_ uint8_t in_v, R2Y_DETAIL_ planar_uv_t<S> & ot_uv)
 {
     ot_uv.uv_->cb_ = in_u;
     ot_uv.uv_->cr_ = in_v; ++(ot_uv.uv_);
 }
 
 template <R2Y_ supported S, R2Y_ plane_type P>
-typename R2Y_ enable_if<(P == R2Y_ plane_Y),
-R2Y_ byte_t *>::type split(R2Y_ byte_t * in_data, GLB_ size_t /*in_size*/)
+STD_ enable_if_t<(P == R2Y_ plane_Y), R2Y_ byte_t *>
+    split(R2Y_ byte_t * in_data, GLB_ size_t /*in_size*/)
 {
     return in_data;
 }
 
 template <R2Y_ supported S, R2Y_ plane_type P>
-typename R2Y_ enable_if<( (P == R2Y_ plane_U) && (S == R2Y_ yuv_YU12 || S == R2Y_ yuv_411P || 
-                                                  S == R2Y_ yuv_422P || S == R2Y_ yuv_YUV9) ) ||
-                        ( (P == R2Y_ plane_V) && (S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YVU9) ),
-R2Y_ byte_t *>::type split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+STD_ enable_if_t<( (P == R2Y_ plane_U) && (S == R2Y_ yuv_YU12 || S == R2Y_ yuv_411P || 
+                                           S == R2Y_ yuv_422P || S == R2Y_ yuv_YUV9) ) ||
+                 ( (P == R2Y_ plane_V) && (S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YVU9) ), R2Y_ byte_t *>
+    split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
 {
     return in_data + in_size;
 }
 
 template <R2Y_ supported S, R2Y_ plane_type P>
-typename R2Y_ enable_if<( (P == R2Y_ plane_V) && (S == R2Y_ yuv_422P) ),
-R2Y_ byte_t *>::type split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+STD_ enable_if_t<( (P == R2Y_ plane_V) && (S == R2Y_ yuv_422P) ), R2Y_ byte_t *>
+     split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
 {
     return in_data + in_size + (in_size >> 1);
 }
 
 template <R2Y_ supported S, R2Y_ plane_type P>
-typename R2Y_ enable_if<( (P == R2Y_ plane_V) && (S == R2Y_ yuv_YU12 || S == R2Y_ yuv_411P) ) ||
-                        ( (P == R2Y_ plane_U) && (S == R2Y_ yuv_YV12) ),
-R2Y_ byte_t *>::type split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+STD_ enable_if_t<( (P == R2Y_ plane_V) && (S == R2Y_ yuv_YU12 || S == R2Y_ yuv_411P) ) ||
+                 ( (P == R2Y_ plane_U) && (S == R2Y_ yuv_YV12) ), R2Y_ byte_t *>
+     split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
 {
     return in_data + in_size + (in_size >> 2);
 }
 
 template <R2Y_ supported S, R2Y_ plane_type P>
-typename R2Y_ enable_if<( (P == R2Y_ plane_V) && (S == R2Y_ yuv_YUV9) ) ||
-                        ( (P == R2Y_ plane_U) && (S == R2Y_ yuv_YVU9) ),
-R2Y_ byte_t *>::type split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+STD_ enable_if_t<( (P == R2Y_ plane_V) && (S == R2Y_ yuv_YUV9) ) ||
+                 ( (P == R2Y_ plane_U) && (S == R2Y_ yuv_YVU9) ), R2Y_ byte_t *>
+     split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
 {
     return in_data + in_size + (in_size >> 4);
 }
 
 template <R2Y_ supported S>
-typename R2Y_ enable_if<(S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YU12 || 
+STD_ enable_if_t<(S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YU12 || 
                          S == R2Y_ yuv_411P || S == R2Y_ yuv_422P ||
-                         S == R2Y_ yuv_YUV9 || S == R2Y_ yuv_YVU9),
-R2Y_DETAIL_ planar_uv_t<S> >::type fill(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+                         S == R2Y_ yuv_YUV9 || S == R2Y_ yuv_YVU9), R2Y_DETAIL_ planar_uv_t<S>>
+    fill(R2Y_ byte_t * in_data, GLB_ size_t in_size)
 {
-    R2Y_DETAIL_ planar_uv_t<S> ret =
+    return
     {
         R2Y_DETAIL_ split<S, R2Y_ plane_U>(in_data, in_size),
         R2Y_DETAIL_ split<S, R2Y_ plane_V>(in_data, in_size)
     };
-    return ret;
 }
 
 template <R2Y_ supported S>
-typename R2Y_ enable_if<(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || 
-                         S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21),
-R2Y_DETAIL_ planar_uv_t<S> >::type fill(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+STD_ enable_if_t<(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || 
+                         S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21), R2Y_DETAIL_ planar_uv_t<S>>
+    fill(R2Y_ byte_t * in_data, GLB_ size_t in_size)
 {
-    R2Y_DETAIL_ planar_uv_t<S> ret =
+    return
     {
-        reinterpret_cast<typename R2Y_DETAIL_ planar_uv_t<S>::inner *>(
-                                  R2Y_DETAIL_ split<R2Y_ yuv_YU12, R2Y_ plane_U>(in_data, in_size))
+        reinterpret_cast<decltype(std::declval<R2Y_DETAIL_ planar_uv_t<S>>().uv_)>
+                        (R2Y_DETAIL_ split<R2Y_ yuv_YU12, R2Y_ plane_U>(in_data, in_size))
     };
-    return ret;
 }
 
 template <R2Y_ supported S>
@@ -257,13 +245,7 @@ public:
     }
 };
 
-template <R2Y_ supported S> class impl_<R2Y_ yuv_NV42, S> : public impl_<R2Y_ yuv_NV24, S>
-{
-public:
-    impl_(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
-        : impl_<R2Y_ yuv_NV24, S>(in_data, in_w, in_h)
-    {}
-};
+R2Y_DETAIL_INHERIT_(yuv_NV42, yuv_NV24)
 
 /* 4:2:2 */
 
@@ -335,29 +317,9 @@ public:
     }
 };
 
-template <R2Y_ supported S> class impl_<R2Y_ yuv_YU12, S> : public impl_<R2Y_ yuv_YV12, S>
-{
-public:
-    impl_(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
-        : impl_<R2Y_ yuv_YV12, S>(in_data, in_w, in_h)
-    {}
-};
-
-template <R2Y_ supported S> class impl_<R2Y_ yuv_NV12, S> : public impl_<R2Y_ yuv_YV12, S>
-{
-public:
-    impl_(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
-        : impl_<R2Y_ yuv_YV12, S>(in_data, in_w, in_h)
-    {}
-};
-
-template <R2Y_ supported S> class impl_<R2Y_ yuv_NV21, S> : public impl_<R2Y_ yuv_YV12, S>
-{
-public:
-    impl_(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
-        : impl_<R2Y_ yuv_YV12, S>(in_data, in_w, in_h)
-    {}
-};
+R2Y_DETAIL_INHERIT_(yuv_YU12, yuv_YV12)
+R2Y_DETAIL_INHERIT_(yuv_NV12, yuv_YV12)
+R2Y_DETAIL_INHERIT_(yuv_NV21, yuv_YV12)
 
 /* 4:1:1 */
 
@@ -444,14 +406,9 @@ public:
     }
 };
 
-template <R2Y_ supported S> class impl_<R2Y_ yuv_YVU9, S> : public impl_<R2Y_ yuv_YUV9, S>
-{
-public:
-    impl_(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
-        : impl_<R2Y_ yuv_YUV9, S>(in_data, in_w, in_h)
-    {}
-};
+R2Y_DETAIL_INHERIT_(yuv_YVU9, yuv_YUV9)
 
+#pragma pop_macro("R2Y_DETAIL_INHERIT_")
 #pragma pop_macro("R2Y_DETAIL_")
 
 } // namespace detail_iterator_
@@ -462,7 +419,5 @@ class iterator : public R2Y_ detail_iterator_::impl_<S>
     typedef R2Y_ detail_iterator_::impl_<S> base_t;
 
 public:
-    iterator(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
-        : base_t(in_data, in_w, in_h)
-    {}
+    using base_t::base_t;
 };

@@ -64,9 +64,6 @@ enum plane_type
 /// Useful tools for SFINAE
 ////////////////////////////////////////////////////////////////
 
-template <bool, typename T = void> struct enable_if          {  /* Nothing */  };
-template <      typename T>        struct enable_if<true, T> { typedef T type; };
-
 template <R2Y_ supported S> struct is_rgb
 {
     enum { value = ((S > rgb_MIN) && (S < rgb_MAX)) ? 1 : 0 };

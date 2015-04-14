@@ -10,28 +10,28 @@
 /* Calculate RGB size */
 
 template <R2Y_ supported S>
-typename R2Y_ enable_if<(S == R2Y_ rgb_888),
+typename STD_ enable_if<(S == R2Y_ rgb_888),
 GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 {
     return (in_w * in_h) * sizeof(R2Y_ rgb_t);
 }
 
 template <R2Y_ supported S>
-typename R2Y_ enable_if<(S == R2Y_ rgb_565 || S == R2Y_ rgb_555),
+typename STD_ enable_if<(S == R2Y_ rgb_565 || S == R2Y_ rgb_555),
 GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 {
     return (in_w * in_h) * sizeof(GLB_ uint16_t);
 }
 
 template <R2Y_ supported S>
-typename R2Y_ enable_if<(S == R2Y_ rgb_444),
+typename STD_ enable_if<(S == R2Y_ rgb_444),
 GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 {
     return ( (in_w * in_h * 3 + 1) >> 1 );
 }
 
 template <R2Y_ supported S>
-typename R2Y_ enable_if<(S == R2Y_ rgb_888X),
+typename STD_ enable_if<(S == R2Y_ rgb_888X),
 GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 {
     return (in_w * in_h) * sizeof(GLB_ uint32_t);
@@ -40,14 +40,14 @@ GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 /* Calculate YUV size */
 
 template <R2Y_ supported S>
-typename R2Y_ enable_if<(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42),
+typename STD_ enable_if<(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42),
 GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 {
     return (in_w * in_h) * sizeof(R2Y_ yuv_t);
 }
 
 template <R2Y_ supported S>
-typename R2Y_ enable_if<(S == R2Y_ yuv_YVYU || S == R2Y_ yuv_UYVY || S == R2Y_ yuv_VYUY || 
+typename STD_ enable_if<(S == R2Y_ yuv_YVYU || S == R2Y_ yuv_UYVY || S == R2Y_ yuv_VYUY || 
                          S == R2Y_ yuv_YUY2 || S == R2Y_ yuv_422P),
 GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 {
@@ -57,7 +57,7 @@ GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 }
 
 template <R2Y_ supported S>
-typename R2Y_ enable_if<(S == R2Y_ yuv_Y41P),
+typename STD_ enable_if<(S == R2Y_ yuv_Y41P),
 GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 {
     GLB_ size_t s = in_w * in_h;
@@ -66,7 +66,7 @@ GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 }
 
 template <R2Y_ supported S>
-typename R2Y_ enable_if<(S == R2Y_ yuv_411P || S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YU12 ||
+typename STD_ enable_if<(S == R2Y_ yuv_411P || S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YU12 ||
                          S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21),
 GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 {
@@ -76,7 +76,7 @@ GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 }
 
 template <R2Y_ supported S>
-typename R2Y_ enable_if<(S == R2Y_ yuv_YVU9 || S == R2Y_ yuv_YUV9),
+typename STD_ enable_if<(S == R2Y_ yuv_YVU9 || S == R2Y_ yuv_YUV9),
 GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 {
     GLB_ size_t s = in_w * in_h;

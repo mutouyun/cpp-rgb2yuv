@@ -91,7 +91,6 @@
     <ClInclude Include="..\include\detail\scope_block.hxx" />
     <ClInclude Include="..\include\detail\undefine.hxx" />
     <ClInclude Include="..\include\rgb2yuv.hpp" />
-    <ClInclude Include="..\include\rgb2yuv_old.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="test.cpp" />
