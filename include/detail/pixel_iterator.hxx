@@ -19,8 +19,8 @@ namespace detail_iterator_ {
     template <R2Y_ supported S>                       \
     class impl_<R2Y_ SP, S> : public impl_<R2Y_ P, S> \
     {                                                 \
-        public:                                       \
-            using impl_<R2Y_ P, S>::impl_;            \
+    public:                                           \
+        using impl_<R2Y_ P, S>::impl_;                \
     };
 
 template <R2Y_ supported T, R2Y_ supported S = T>
