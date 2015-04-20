@@ -89,5 +89,5 @@ GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 template <R2Y_ supported S>
 R2Y_ scope_block<R2Y_ byte_t> create_buffer(GLB_ size_t in_w, GLB_ size_t in_h)
 {
-    return R2Y_ scope_block<R2Y_ byte_t>( calculate_size<S>(in_w, in_h) );
+    return R2Y_ scope_block<R2Y_ byte_t>{ calculate_size<S>(in_w, in_h) };
 }

@@ -39,32 +39,29 @@ public:
         : block_(NULL), size_(0), trust_(false)
     {}
 
-    explicit scope_block(GLB_ size_t count)
-        : block_(NULL), size_(0), trust_(false)
+    explicit scope_block(GLB_ size_t count) : scope_block()
     {
         reset(count);
     }
 
-    scope_block(T * block, GLB_ size_t count)
-        : block_(NULL), size_(0), trust_(false)
+    scope_block(T * block, GLB_ size_t count) : scope_block()
     {
         reset(block, count);
     }
 
-    /*
-     * The copy constructor always taking ownership 
-     * from the other scope_block object, just like std::auto_ptr.
-     */
-    scope_block(scope_block const & rhs)
-        : block_(NULL), size_(0), trust_(false)
-    {
-        this->move(rhs);
-    }
+    scope_block(scope_block const &) = delete;
+
     template <typename U>
-    scope_block(scope_block<U, AllocT> const & rhs)
-        : block_(NULL), size_(0), trust_(false)
+    scope_block(scope_block<U, AllocT> && rhs) : scope_block()
     {
-        this->move(rhs);
+        this->swap(rhs);
+    }
+
+    template <typename U>
+    scope_block & operator=(scope_block<U, AllocT> && rhs)
+    {
+        this->swap(rhs);
+        return (*this);
     }
 
     ~scope_block(void)
@@ -89,12 +86,6 @@ public:
     }
 
     void trust(void) { trust_ = true; }
-
-    template <typename U>
-    void move(scope_block<U, AllocT> const & rhs)
-    {
-        this->swap( const_cast<scope_block<U, AllocT> &>(rhs) );
-    }
 
     void swap(scope_block & rhs)
     {
@@ -133,21 +124,6 @@ public:
 
     T       & operator[](GLB_ size_t pos)       { return block_[pos]; }
     T const & operator[](GLB_ size_t pos) const { return block_[pos]; }
-
-private:
-    /*
-     * Delete the copy assignment operator,
-     * to make scope_block non-copyable.
-     */
-    scope_block & operator=(const scope_block &); // No need to implement it.
-
-    /*
-     * Disallow heap allocation of scope_block.
-     */
-    void * operator new     (GLB_ size_t);
-    void * operator new[]   (GLB_ size_t);
-    void   operator delete  (void *) {}
-    void   operator delete[](void *) {}
 };
 
 template <typename T, typename U, typename A>

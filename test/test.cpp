@@ -47,8 +47,7 @@ int main(int /*argc*/, char* /*argv*/[])
     printf("\n");
 
 #define TEST_(TO)                                                     \
-    yuv.move( create_buffer<yuv_##TO>(4, 4) );                        \
-    transform<r2y::rgb_888X, yuv_##TO>((uint8_t*)data, 4, 4, &yuv); \
+    yuv = transform<r2y::rgb_888X, yuv_##TO>((uint8_t*)data, 4, 4);   \
     printf("-> %s: ", #TO);                                           \
     for (size_t i = 0; i < yuv.count(); ++i) printf("%02X ", yuv[i]); \
     printf("\n")
@@ -70,11 +69,10 @@ int main(int /*argc*/, char* /*argv*/[])
     simple::stopwatch<> sw(false);
     printf("\n");
 #define TEST_SPEED_(TO, ...)                                                    \
-    yuv.move(create_buffer<yuv_##TO>(4, 4));                                    \
     sw.start();                                                                 \
     for (int i = 0; i < 2000000; ++i)                                           \
     {                                                                           \
-        transform##__VA_ARGS__<rgb_888X, yuv_##TO>((uint8_t*)data, 4, 4, &yuv); \
+        yuv = transform##__VA_ARGS__<rgb_888X, yuv_##TO>((uint8_t*)data, 4, 4); \
     }                                                                           \
     printf("%s: %d ms. %s\n", #TO, static_cast<size_t>(sw.value() * 1000), ""#__VA_ARGS__)
 

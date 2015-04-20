@@ -37,8 +37,8 @@ struct do_convert_t
         is_block      = R2Y_ iterator<S>::is_block
     };
 
-    do_convert_t(R2Y_ scope_block<R2Y_ byte_t> * ot_data, GLB_ size_t in_w, GLB_ size_t in_h)
-        : iter_(ot_data->data(), in_w, in_h)
+    do_convert_t(R2Y_ scope_block<R2Y_ byte_t> & ot_data, GLB_ size_t in_w, GLB_ size_t in_h)
+        : iter_(ot_data.data(), in_w, in_h)
     {}
 
     template <typename T, int> struct convert_pixel_t;
@@ -67,15 +67,15 @@ private:
 };
 
 template <R2Y_ supported In, R2Y_ supported Ot>
-typename STD_ enable_if<(In != Ot)
->::type transform(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h,
-                  R2Y_ scope_block<R2Y_ byte_t> * ot_data)
+STD_ enable_if_t<(In != Ot), R2Y_ scope_block<R2Y_ byte_t>>
+    transform(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h)
 {
     assert(in_data != NULL);
-    assert(ot_data != NULL);
     assert(in_w > 0 && in_h > 0);
 
+    R2Y_ scope_block<R2Y_ byte_t> ot_data{ create_buffer<Ot>(in_w, in_h) };
     R2Y_ pixel_foreach<In>(in_data, in_w, in_h, R2Y_ do_convert_t<Ot>{ ot_data, in_w, in_h });
+    return ot_data;
 }
     
 } // namespace R2Y_NAMESPACE_
