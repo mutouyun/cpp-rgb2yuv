@@ -1,6 +1,6 @@
 /*
     rgb2yuv - Code covered by the MIT License
-    Author: mutouyun (http://darkc.at)
+    Author: mutouyun (http://orzz.org)
 */
 
 ////////////////////////////////////////////////////////////////
