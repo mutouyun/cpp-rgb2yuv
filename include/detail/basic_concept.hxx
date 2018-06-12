@@ -23,7 +23,7 @@ enum supported
 
     /*
      * YUV Formats Chapter 2. Image Formats
-     * See: http://www.linuxtv.org/downloads/v4l-dvb-apis/yuv-formats.html
+     * See: http://www.retiisi.org.uk/v4l2/tmp/media_api/yuv-formats.html
     */
     yuv_MIN,
     yuv_NV24,            // 444 SP

@@ -13,17 +13,17 @@ int main(int /*argc*/, char* /*argv*/[])
 
     uint32_t xx = 2179683; // 00000000 00100001 01000010 01100011 (33, 66, 99)
     rgb_t yy;
-    //rgb_format<rgb_888X>((uint8_t*)&xx, 4, &yy);
-    //printf("%03d %03d %03d\n", yy.r_, yy.g_, yy.b_);
+	memcpy(&yy, &xx, sizeof(yy));
+    //yy.r_ = 76; yy.g_ = 255; yy.b_ = 29;
+	printf("%03d %03d %03d\n", yy.r_, yy.g_, yy.b_);
 
-//    yy.r_ = 76; yy.g_ = 255; yy.b_ = 29;
     yuv_t zz;
     zz.y_ = pixel_convert<plane_Y>(yy);
     zz.u_ = pixel_convert<plane_U>(yy);
     zz.v_ = pixel_convert<plane_V>(yy);
     printf("%03d %03d %03d\n", zz.y_, zz.u_, zz.v_);
 
-//    zz.y_ = 255; zz.u_ = zz.v_ = 0;
+    //zz.y_ = 255; zz.u_ = zz.v_ = 0;
     yy.r_ = pixel_convert<plane_R>(zz);
     yy.g_ = pixel_convert<plane_G>(zz);
     yy.b_ = pixel_convert<plane_B>(zz);

@@ -59,7 +59,7 @@ private:
     GLB_ int32_t tb_[3][convertor::MAX + 1];
 };
 
-R2Y_FORCE_INLINE_ auto factor_matrix(void)
+R2Y_FORCE_INLINE_ convertor const * factor_matrix(void)
 {
     /*
      * The factors for converting between YUV and RGB
