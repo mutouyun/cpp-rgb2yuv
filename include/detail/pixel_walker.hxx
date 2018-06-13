@@ -10,8 +10,8 @@
 /* 888 */
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_888 && F::iterator_size == 1 && F::is_block == 0)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_888 && F::iterator_size == 1 && F::is_block == 0)>
 {
     GLB_ size_t size = calculate_size<S>(in_w, in_h);
     assert((size % sizeof(R2Y_ rgb_t)) == 0); // 3 input bytes convert to 1 pixel
@@ -23,8 +23,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_888 && F::iterator_size == 1 && F::is_block == 0
 }
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_888 && F::iterator_size > 1 && F::is_block == 0)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_888 && F::iterator_size > 1 && F::is_block == 0)>
 {
     GLB_ size_t size = calculate_size<S>(in_w, in_h);
     assert((size % sizeof(R2Y_ rgb_t)) == 0); // 3 input bytes convert to 1 pixel
@@ -36,8 +36,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_888 && F::iterator_size > 1 && F::is_block == 0)
 }
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_888 && F::iterator_size > 1 && F::is_block == 1)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_888 && F::iterator_size > 1 && F::is_block == 1)>
 {
     assert((in_w % F::iterator_size) == 0);
     assert((in_h % F::iterator_size) == 0);
@@ -64,8 +64,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_888 && F::iterator_size > 1 && F::is_block == 1)
 /* 565 */
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_565 && F::iterator_size == 1 && F::is_block == 0)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_565 && F::iterator_size == 1 && F::is_block == 0)>
 {
     GLB_ size_t size = calculate_size<S>(in_w, in_h);
     assert((size & 1) == 0); // in_size must be an even number
@@ -81,8 +81,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_565 && F::iterator_size == 1 && F::is_block == 0
 }
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_565 && F::iterator_size > 1 && F::is_block == 0)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_565 && F::iterator_size > 1 && F::is_block == 0)>
 {
     GLB_ size_t size = calculate_size<S>(in_w, in_h);
     assert((size & 1) == 0); // in_size must be an even number
@@ -102,8 +102,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_565 && F::iterator_size > 1 && F::is_block == 0)
 }
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_565 && F::iterator_size > 1 && F::is_block == 1)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_565 && F::iterator_size > 1 && F::is_block == 1)>
 {
     assert((in_w % F::iterator_size) == 0);
     assert((in_h % F::iterator_size) == 0);
@@ -133,8 +133,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_565 && F::iterator_size > 1 && F::is_block == 1)
 /* 555 */
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_555 && F::iterator_size == 1 && F::is_block == 0)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_555 && F::iterator_size == 1 && F::is_block == 0)>
 {
     GLB_ size_t size = calculate_size<S>(in_w, in_h);
     assert((size & 1) == 0); // in_size must be an even number
@@ -150,8 +150,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_555 && F::iterator_size == 1 && F::is_block == 0
 }
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_555 && F::iterator_size > 1 && F::is_block == 0)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_555 && F::iterator_size > 1 && F::is_block == 0)>
 {
     GLB_ size_t size = calculate_size<S>(in_w, in_h);
     assert((size & 1) == 0); // in_size must be an even number
@@ -171,8 +171,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_555 && F::iterator_size > 1 && F::is_block == 0)
 }
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_555 && F::iterator_size > 1 && F::is_block == 1)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_555 && F::iterator_size > 1 && F::is_block == 1)>
 {
     assert((in_w % F::iterator_size) == 0);
     assert((in_h % F::iterator_size) == 0);
@@ -202,8 +202,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_555 && F::iterator_size > 1 && F::is_block == 1)
 /* 444 */
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_444 && F::iterator_size == 1 && F::is_block == 0)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_444 && F::iterator_size == 1 && F::is_block == 0)>
 {
     GLB_ size_t size = calculate_size<S>(in_w, in_h);
     assert((size % 3) == 0); // 3 input bytes convert to 2 pixels (6 bytes)
@@ -222,8 +222,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_444 && F::iterator_size == 1 && F::is_block == 0
 }
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_444 && F::iterator_size > 1 && (F::iterator_size & 1) == 0 && F::is_block == 0)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_444 && F::iterator_size > 1 && (F::iterator_size & 1) == 0 && F::is_block == 0)>
 {
     GLB_ size_t size = calculate_size<S>(in_w, in_h);
     assert((size % 3) == 0); // 3 input bytes convert to 2 pixels (6 bytes)
@@ -250,8 +250,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_444 && F::iterator_size > 1 && (F::iterator_size
 }
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_444 && F::iterator_size > 1 && (F::iterator_size & 1) == 0 && F::is_block == 1)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_444 && F::iterator_size > 1 && (F::iterator_size & 1) == 0 && F::is_block == 1)>
 {
     assert((in_w % F::iterator_size) == 0);
     assert((in_h % F::iterator_size) == 0);
@@ -288,8 +288,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_444 && F::iterator_size > 1 && (F::iterator_size
 /* 888X */
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_888X && F::iterator_size == 1 && F::is_block == 0)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_888X && F::iterator_size == 1 && F::is_block == 0)>
 {
     GLB_ size_t size = calculate_size<S>(in_w, in_h);
     assert((size % 4) == 0); // 4 input bytes convert to 1 pixel (3 bytes)
@@ -301,8 +301,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_888X && F::iterator_size == 1 && F::is_block == 
 }
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_888X && F::iterator_size > 1 && F::is_block == 0)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_888X && F::iterator_size > 1 && F::is_block == 0)>
 {
     GLB_ size_t size = calculate_size<S>(in_w, in_h);
     assert((size % 4) == 0); // 4 input bytes convert to 1 pixel (3 bytes)
@@ -319,8 +319,8 @@ STD_ enable_if_t<(S == R2Y_ rgb_888X && F::iterator_size > 1 && F::is_block == 0
 }
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
-STD_ enable_if_t<(S == R2Y_ rgb_888X && F::iterator_size > 1 && F::is_block == 1)>
-    pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+	-> STD_ enable_if_t<(S == R2Y_ rgb_888X && F::iterator_size > 1 && F::is_block == 1)>
 {
     assert((in_w % F::iterator_size) == 0);
     assert((in_h % F::iterator_size) == 0);

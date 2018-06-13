@@ -39,8 +39,6 @@ int main(int /*argc*/, char* /*argv*/[])
     scope_block<uint8_t> yuv;
 
     printf("RGB-888X: ");
-    //rgb_t rgb_888[sizeof(data) / sizeof(uint32_t)];
-    //rgb_format<rgb_888X>((uint8_t*)data, sizeof(data), rgb_888);
     uint8_t* rgb = (uint8_t*)data;
     for (size_t i = 0; i < sizeof(data); ++i)
         printf("%02X ", rgb[i]);

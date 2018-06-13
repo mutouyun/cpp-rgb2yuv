@@ -131,65 +131,67 @@ template <>               struct planar_uv_t<R2Y_ yuv_NV12> { struct { GLB_ uint
 template <>               struct planar_uv_t<R2Y_ yuv_NV21> { struct { GLB_ uint8_t cr_, cb_; } * uv_; };
 
 template <R2Y_ supported S>
-STD_ enable_if_t<!(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21)>
-    set_and_next(GLB_ uint8_t in_u, GLB_ uint8_t in_v, R2Y_DETAIL_ planar_uv_t<S> & ot_uv)
+auto set_and_next(GLB_ uint8_t in_u, GLB_ uint8_t in_v, R2Y_DETAIL_ planar_uv_t<S> & ot_uv)
+	-> STD_ enable_if_t<!(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21)>
 {
     (*(ot_uv.cb_)) = in_u; ++(ot_uv.cb_);
     (*(ot_uv.cr_)) = in_v; ++(ot_uv.cr_);
 }
 
 template <R2Y_ supported S>
-STD_ enable_if_t<(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21)>
-    set_and_next(GLB_ uint8_t in_u, GLB_ uint8_t in_v, R2Y_DETAIL_ planar_uv_t<S> & ot_uv)
+auto set_and_next(GLB_ uint8_t in_u, GLB_ uint8_t in_v, R2Y_DETAIL_ planar_uv_t<S> & ot_uv)
+	-> STD_ enable_if_t<(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21)>
 {
     ot_uv.uv_->cb_ = in_u;
     ot_uv.uv_->cr_ = in_v; ++(ot_uv.uv_);
 }
 
 template <R2Y_ supported S, R2Y_ plane_type P>
-STD_ enable_if_t<(P == R2Y_ plane_Y), R2Y_ byte_t *>
-    split(R2Y_ byte_t * in_data, GLB_ size_t /*in_size*/)
+auto split(R2Y_ byte_t * in_data, GLB_ size_t /*in_size*/)
+	-> STD_ enable_if_t<(P == R2Y_ plane_Y), R2Y_ byte_t *>
 {
     return in_data;
 }
 
 template <R2Y_ supported S, R2Y_ plane_type P>
-STD_ enable_if_t<( (P == R2Y_ plane_U) && (S == R2Y_ yuv_YU12 || S == R2Y_ yuv_411P || 
-                                           S == R2Y_ yuv_422P || S == R2Y_ yuv_YUV9) ) ||
-                 ( (P == R2Y_ plane_V) && (S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YVU9) ), R2Y_ byte_t *>
-    split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+auto split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+	-> STD_ enable_if_t<((P == R2Y_ plane_U) && (S == R2Y_ yuv_YU12 || S == R2Y_ yuv_411P ||
+												 S == R2Y_ yuv_422P || S == R2Y_ yuv_YUV9)) ||
+						((P == R2Y_ plane_V) && (S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YVU9)), R2Y_ byte_t *>
 {
     return in_data + in_size;
 }
 
 template <R2Y_ supported S, R2Y_ plane_type P>
-STD_ enable_if_t<( (P == R2Y_ plane_V) && (S == R2Y_ yuv_422P) ), R2Y_ byte_t *>
-     split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+auto split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+	-> STD_ enable_if_t<((P == R2Y_ plane_V) && (S == R2Y_ yuv_422P)), R2Y_ byte_t *>
 {
     return in_data + in_size + (in_size >> 1);
 }
 
 template <R2Y_ supported S, R2Y_ plane_type P>
-STD_ enable_if_t<( (P == R2Y_ plane_V) && (S == R2Y_ yuv_YU12 || S == R2Y_ yuv_411P) ) ||
-                 ( (P == R2Y_ plane_U) && (S == R2Y_ yuv_YV12) ), R2Y_ byte_t *>
-     split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+auto split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+	-> STD_ enable_if_t<((P == R2Y_ plane_V) && (S == R2Y_ yuv_YU12 || S == R2Y_ yuv_411P)) ||
+						((P == R2Y_ plane_U) && (S == R2Y_ yuv_YV12)), R2Y_ byte_t *>
 {
     return in_data + in_size + (in_size >> 2);
 }
 
 template <R2Y_ supported S, R2Y_ plane_type P>
-STD_ enable_if_t<( (P == R2Y_ plane_V) && (S == R2Y_ yuv_YUV9) ) ||
-                 ( (P == R2Y_ plane_U) && (S == R2Y_ yuv_YVU9) ), R2Y_ byte_t *>
-     split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+auto split(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+	-> STD_ enable_if_t<((P == R2Y_ plane_V) && (S == R2Y_ yuv_YUV9)) ||
+						((P == R2Y_ plane_U) && (S == R2Y_ yuv_YVU9)), R2Y_ byte_t *>
+
 {
     return in_data + in_size + (in_size >> 4);
 }
 
 template <R2Y_ supported S>
-STD_ enable_if_t<(S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YU12 || 
-                         S == R2Y_ yuv_411P || S == R2Y_ yuv_422P ||
-                         S == R2Y_ yuv_YUV9 || S == R2Y_ yuv_YVU9), R2Y_DETAIL_ planar_uv_t<S>>
-    fill(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+auto fill(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+	-> STD_ enable_if_t<(S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YU12 ||
+						 S == R2Y_ yuv_411P || S == R2Y_ yuv_422P ||
+						 S == R2Y_ yuv_YUV9 || S == R2Y_ yuv_YVU9), R2Y_DETAIL_ planar_uv_t<S>>
+
 {
     return
     {
@@ -199,9 +201,9 @@ STD_ enable_if_t<(S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YU12 ||
 }
 
 template <R2Y_ supported S>
-STD_ enable_if_t<(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || 
-                         S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21), R2Y_DETAIL_ planar_uv_t<S>>
-    fill(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+auto fill(R2Y_ byte_t * in_data, GLB_ size_t in_size)
+	-> STD_ enable_if_t<(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 ||
+						 S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21), R2Y_DETAIL_ planar_uv_t<S>>
 {
     return
     {
