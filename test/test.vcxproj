@@ -91,6 +91,7 @@
     <ClInclude Include="..\include\detail\predefine.hxx" />
     <ClInclude Include="..\include\detail\scope_block.hxx" />
     <ClInclude Include="..\include\detail\undefine.hxx" />
+    <ClInclude Include="..\include\detail\yuv_helper.hxx" />
     <ClInclude Include="..\include\rgb2yuv.hpp" />
   </ItemGroup>
   <ItemGroup>

@@ -43,14 +43,14 @@ struct convertor
 
     template <bool NeedClip>
     R2Y_FORCE_INLINE_ auto convert(R2Y_ pixel_t const & in_p) const
-		-> STD_ enable_if_t<NeedClip, GLB_ uint8_t>
+        -> STD_ enable_if_t<NeedClip, GLB_ uint8_t>
     {
         return clip(this->convert(in_p));
     }
 
     template <bool NeedClip>
     R2Y_FORCE_INLINE_ auto convert(R2Y_ pixel_t const & in_p) const
-		-> STD_ enable_if_t<!NeedClip, GLB_ uint8_t>
+        -> STD_ enable_if_t<!NeedClip, GLB_ uint8_t>
     {
         return this->convert(in_p);
     }
@@ -93,8 +93,8 @@ R2Y_FORCE_INLINE_ GLB_ uint8_t pixel_convert(R2Y_ pixel_t const & in_p)
 
 template <R2Y_ plane_type P, typename T>
 R2Y_FORCE_INLINE_ auto pixel_convert(T const & in_p)
-	-> STD_ enable_if_t<(R2Y_ is_yuv_plane<P>::value && STD_ is_same<T, R2Y_ rgb_t>::value) ||
-						(R2Y_ is_rgb_plane<P>::value && STD_ is_same<T, R2Y_ yuv_t>::value), GLB_ uint8_t>
+    -> STD_ enable_if_t<(R2Y_ is_yuv_plane<P>::value && STD_ is_same<T, R2Y_ rgb_t>::value) ||
+                        (R2Y_ is_rgb_plane<P>::value && STD_ is_same<T, R2Y_ yuv_t>::value), GLB_ uint8_t>
 {
     return pixel_convert<P>(R2Y_ pixel_t::cast(in_p));
 }

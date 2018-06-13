@@ -13,9 +13,9 @@ int main(int /*argc*/, char* /*argv*/[])
 
     uint32_t xx = 2179683; // 00000000 00100001 01000010 01100011 (33, 66, 99)
     rgb_t yy;
-	memcpy(&yy, &xx, sizeof(yy));
+    memcpy(&yy, &xx, sizeof(yy));
     //yy.r_ = 76; yy.g_ = 255; yy.b_ = 29;
-	printf("%03d %03d %03d\n", yy.r_, yy.g_, yy.b_);
+    printf("%03d %03d %03d\n", yy.r_, yy.g_, yy.b_);
 
     yuv_t zz;
     zz.y_ = pixel_convert<plane_Y>(yy);
@@ -45,11 +45,18 @@ int main(int /*argc*/, char* /*argv*/[])
     printf("\n");
 
 #define TEST_(TO)                                                     \
-    yuv = transform<r2y::rgb_888X, yuv_##TO>((uint8_t*)data, 4, 4);   \
+    yuv = transform<rgb_888X, yuv_##TO>((uint8_t*)data, 4, 4);        \
     printf("-> %s: ", #TO);                                           \
     for (size_t i = 0; i < yuv.count(); ++i) printf("%02X ", yuv[i]); \
     printf("\n")
 
+    TEST_(I420);
+    {
+        auto rgb = transform<yuv_I420, rgb_888>(yuv.data(), 4, 4);
+        printf("## I420 -> 888: ");
+        for (size_t i = 0; i < rgb.count(); ++i) printf("%02X ", rgb[i]);
+        printf("\n");
+    }
     TEST_(YV12);
     TEST_(YU12);
     TEST_(NV12);
@@ -60,7 +67,19 @@ int main(int /*argc*/, char* /*argv*/[])
     TEST_(411P);
     TEST_(422P);
     TEST_(NV24);
+    {
+        auto rgb = transform<yuv_NV24, rgb_888>(yuv.data(), 4, 4);
+        printf("## NV24 -> 888: ");
+        for (size_t i = 0; i < rgb.count(); ++i) printf("%02X ", rgb[i]);
+        printf("\n");
+    }
     TEST_(NV42);
+    {
+        auto rgb = transform<yuv_NV42, rgb_888>(yuv.data(), 4, 4);
+        printf("## NV42 -> 888: ");
+        for (size_t i = 0; i < rgb.count(); ++i) printf("%02X ", rgb[i]);
+        printf("\n");
+    }
     TEST_(YUV9);
     TEST_(YVU9);
 

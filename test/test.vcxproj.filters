@@ -45,6 +45,9 @@
     <ClInclude Include="..\include\detail\undefine.hxx">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\detail\yuv_helper.hxx">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="test.cpp">

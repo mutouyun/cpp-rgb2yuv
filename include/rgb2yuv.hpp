@@ -20,6 +20,7 @@ namespace R2Y_NAMESPACE_ {
 #include "detail/basic_concept.hxx"
 #include "detail/scope_block.hxx"
 #include "detail/buffer_creator.hxx"
+#include "detail/yuv_helper.hxx"
 #include "detail/pixel_walker.hxx"
 #include "detail/pixel_iterator.hxx"
 #include "detail/pixel_convertor.hxx"
