@@ -171,22 +171,6 @@ public:
 
 /* YUV Planar */
 
-template <R2Y_ supported S>
-auto set_and_next(GLB_ uint8_t in_u, GLB_ uint8_t in_v, R2Y_HELPER_ planar_uv_t<S> & ot_uv)
-    -> STD_ enable_if_t<!(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21)>
-{
-    (*(ot_uv.cb_)) = in_u; ++(ot_uv.cb_);
-    (*(ot_uv.cr_)) = in_v; ++(ot_uv.cr_);
-}
-
-template <R2Y_ supported S>
-auto set_and_next(GLB_ uint8_t in_u, GLB_ uint8_t in_v, R2Y_HELPER_ planar_uv_t<S> & ot_uv)
-    -> STD_ enable_if_t<(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21)>
-{
-    ot_uv.uv_->cb_ = in_u;
-    ot_uv.uv_->cr_ = in_v; ++(ot_uv.uv_);
-}
-
 /* 4:4:4 */
 
 template <R2Y_ supported S> class impl_<R2Y_ yuv_NV24, S> : R2Y_HELPER_ yuv_planar<S>
@@ -206,7 +190,8 @@ public:
     void set_and_next(R2Y_ yuv_t const & rhs)
     {
         (*y_) = rhs.y_; ++y_;
-        R2Y_DETAIL_ set_and_next(rhs.u_, rhs.v_, uv_);
+        R2Y_HELPER_  set_planar_uv(rhs.u_, rhs.v_, uv_);
+        R2Y_HELPER_ next_planar_uv(uv_);
     }
 };
 
@@ -240,8 +225,9 @@ public:
         {
             R2Y_ yuv_t const & pix = rhs[1];
             (*y_) = pix.y_; ++y_;
-            R2Y_DETAIL_ set_and_next((u_k + pix.u_) >> 1,
-                                     (v_k + pix.v_) >> 1, uv_);
+            R2Y_HELPER_ set_planar_uv((u_k + pix.u_) >> 1,
+                                      (v_k + pix.v_) >> 1, uv_);
+            R2Y_HELPER_ next_planar_uv(uv_);
         }
     }
 };
@@ -277,8 +263,9 @@ public:
             y1_ += w_;
             ye_ = y1_;
         }
-        R2Y_DETAIL_ set_and_next((rhs[0].u_ + rhs[1].u_ + rhs[2].u_ + rhs[3].u_) >> 2,
-                                 (rhs[0].v_ + rhs[1].v_ + rhs[2].v_ + rhs[3].v_) >> 2, uv_);
+        R2Y_HELPER_ set_planar_uv((rhs[0].u_ + rhs[1].u_ + rhs[2].u_ + rhs[3].u_) >> 2,
+                                  (rhs[0].v_ + rhs[1].v_ + rhs[2].v_ + rhs[3].v_) >> 2, uv_);
+        R2Y_HELPER_ next_planar_uv(uv_);
     }
 };
 
@@ -320,7 +307,8 @@ public:
         R2Y_SET_AND_NEXT_(0, = );
         R2Y_SET_AND_NEXT_(1, +=);
         R2Y_SET_AND_NEXT_(2, +=);
-        R2Y_SET_AND_NEXT_(3, +=, R2Y_DETAIL_ set_and_next<S>(u_k >> 2, v_k >> 2, uv_););
+        R2Y_SET_AND_NEXT_(3, +=, R2Y_HELPER_  set_planar_uv<S>(u_k >> 2, v_k >> 2, uv_);
+                                 R2Y_HELPER_ next_planar_uv<S>(uv_););
 
 #   pragma pop_macro("R2Y_SET_AND_NEXT_")
     }
@@ -360,14 +348,15 @@ public:
             y3_ = y2_ + w_;
             ye_ = y1_;
         }
-        R2Y_DETAIL_ set_and_next((rhs[0 ].u_ + rhs[1 ].u_ + rhs[2 ].u_ + rhs[3 ].u_ +
-                                  rhs[4 ].u_ + rhs[5 ].u_ + rhs[6 ].u_ + rhs[7 ].u_ +
-                                  rhs[8 ].u_ + rhs[9 ].u_ + rhs[10].u_ + rhs[11].u_ +
-                                  rhs[12].u_ + rhs[13].u_ + rhs[14].u_ + rhs[15].u_) >> 4,
-                                 (rhs[0 ].v_ + rhs[1 ].v_ + rhs[2 ].v_ + rhs[3 ].v_ +
-                                  rhs[4 ].v_ + rhs[5 ].v_ + rhs[6 ].v_ + rhs[7 ].v_ +
-                                  rhs[8 ].v_ + rhs[9 ].v_ + rhs[10].v_ + rhs[11].v_ +
-                                  rhs[12].v_ + rhs[13].v_ + rhs[14].v_ + rhs[15].v_) >> 4, uv_);
+        R2Y_HELPER_ set_planar_uv((rhs[0 ].u_ + rhs[1 ].u_ + rhs[2 ].u_ + rhs[3 ].u_ +
+                                   rhs[4 ].u_ + rhs[5 ].u_ + rhs[6 ].u_ + rhs[7 ].u_ +
+                                   rhs[8 ].u_ + rhs[9 ].u_ + rhs[10].u_ + rhs[11].u_ +
+                                   rhs[12].u_ + rhs[13].u_ + rhs[14].u_ + rhs[15].u_) >> 4,
+                                  (rhs[0 ].v_ + rhs[1 ].v_ + rhs[2 ].v_ + rhs[3 ].v_ +
+                                   rhs[4 ].v_ + rhs[5 ].v_ + rhs[6 ].v_ + rhs[7 ].v_ +
+                                   rhs[8 ].v_ + rhs[9 ].v_ + rhs[10].v_ + rhs[11].v_ +
+                                   rhs[12].v_ + rhs[13].v_ + rhs[14].v_ + rhs[15].v_) >> 4, uv_);
+        R2Y_HELPER_ next_planar_uv(uv_);
     }
 };
 

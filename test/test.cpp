@@ -50,16 +50,21 @@ int main(int /*argc*/, char* /*argv*/[])
     for (size_t i = 0; i < yuv.count(); ++i) printf("%02X ", yuv[i]); \
     printf("\n")
 
-    TEST_(I420);
+    TEST_(YV12);
     {
-        auto rgb = transform<yuv_I420, rgb_888>(yuv.data(), 4, 4);
-        printf("## I420 -> 888: ");
+        auto rgb = transform<yuv_YV12, rgb_888>(yuv.data(), 4, 4);
+        printf("## YV12 -> 888: ");
         for (size_t i = 0; i < rgb.count(); ++i) printf("%02X ", rgb[i]);
         printf("\n");
     }
-    TEST_(YV12);
     TEST_(YU12);
     TEST_(NV12);
+    {
+        auto rgb = transform<yuv_NV12, rgb_888>(yuv.data(), 4, 4);
+        printf("## NV12 -> 888: ");
+        for (size_t i = 0; i < rgb.count(); ++i) printf("%02X ", rgb[i]);
+        printf("\n");
+    }
     TEST_(NV21);
     TEST_(YUY2);
     TEST_(VYUY);
@@ -74,12 +79,6 @@ int main(int /*argc*/, char* /*argv*/[])
         printf("\n");
     }
     TEST_(NV42);
-    {
-        auto rgb = transform<yuv_NV42, rgb_888>(yuv.data(), 4, 4);
-        printf("## NV42 -> 888: ");
-        for (size_t i = 0; i < rgb.count(); ++i) printf("%02X ", rgb[i]);
-        printf("\n");
-    }
     TEST_(YUV9);
     TEST_(YVU9);
 

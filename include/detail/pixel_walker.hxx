@@ -369,11 +369,12 @@ auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T 
     }
 }
 
-/* YU12 */
+/* YV12/YU12/NV12/NV21 */
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
 auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
-    -> STD_ enable_if_t<(S == R2Y_ yuv_YU12 && F::iterator_size == 1 && F::is_block == 0)>
+    -> STD_ enable_if_t<((S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YU12 ||
+                          S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21) && F::iterator_size == 1 && F::is_block == 0)>
 {
     R2Y_ byte_t * y = nullptr;
     R2Y_HELPER_ planar_uv_t<S> uv;
@@ -386,8 +387,9 @@ auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T 
             R2Y_ yuv_t tmp[2];
             tmp[0].y_ = *y; ++y;
             tmp[1].y_ = *y; ++y;
-            tmp[1].u_ = tmp[0].u_ = *(uv.cb_); ++(uv.cb_);
-            tmp[1].v_ = tmp[0].v_ = *(uv.cr_); ++(uv.cr_);
+            R2Y_HELPER_  get_planar_uv(tmp[0].u_, tmp[0].v_, uv);
+            R2Y_HELPER_  get_planar_uv(tmp[1].u_, tmp[1].v_, uv);
+            R2Y_HELPER_ next_planar_uv(uv);
             STD_ forward<T>(do_sth)(tmp);
         }
         for (GLB_ size_t j = 0; j < in_w; j += 2)
@@ -395,8 +397,9 @@ auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T 
             R2Y_ yuv_t tmp[2];
             tmp[0].y_ = *y; ++y;
             tmp[1].y_ = *y; ++y;
-            tmp[1].u_ = tmp[0].u_ = *(uv1.cb_); ++(uv1.cb_);
-            tmp[1].v_ = tmp[0].v_ = *(uv1.cr_); ++(uv1.cr_);
+            R2Y_HELPER_  get_planar_uv(tmp[0].u_, tmp[0].v_, uv1);
+            R2Y_HELPER_  get_planar_uv(tmp[1].u_, tmp[1].v_, uv1);
+            R2Y_HELPER_ next_planar_uv(uv1);
             STD_ forward<T>(do_sth)(tmp);
         }
     }
