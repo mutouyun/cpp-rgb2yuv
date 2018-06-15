@@ -9,7 +9,7 @@ namespace detail_helper_ {
 
 template <R2Y_ supported> struct packed_yuv_t;
 
-template <> struct packed_yuv_t<R2Y_ yuv_YUY2> { GLB_ uint8_t y0_, cb_, y1_, cr_; };
+template <> struct packed_yuv_t<R2Y_ yuv_YUYV> { GLB_ uint8_t y0_, cb_, y1_, cr_; };
 template <> struct packed_yuv_t<R2Y_ yuv_YVYU> { GLB_ uint8_t y0_, cr_, y1_, cb_; };
 template <> struct packed_yuv_t<R2Y_ yuv_UYVY> { GLB_ uint8_t cb_, y0_, cr_, y1_; };
 template <> struct packed_yuv_t<R2Y_ yuv_VYUY> { GLB_ uint8_t cr_, y0_, cb_, y1_; };
@@ -21,10 +21,10 @@ template <> struct packed_yuv_t<R2Y_ yuv_Y41P> { GLB_ uint8_t u0_, y0_, v0_, y1_
 
 template <R2Y_ supported> struct planar_uv_t { GLB_ uint8_t * cb_, *cr_; };
 
-template <> struct planar_uv_t<R2Y_ yuv_NV24> { struct { GLB_ uint8_t cb_, cr_; } * uv_; };
-template <> struct planar_uv_t<R2Y_ yuv_NV42> { struct { GLB_ uint8_t cr_, cb_; } * uv_; };
-template <> struct planar_uv_t<R2Y_ yuv_NV12> { struct { GLB_ uint8_t cb_, cr_; } * uv_; };
-template <> struct planar_uv_t<R2Y_ yuv_NV21> { struct { GLB_ uint8_t cr_, cb_; } * uv_; };
+template <> struct planar_uv_t<R2Y_ yuv_NV24> { struct { GLB_ uint8_t cr_, cb_; } * uv_; };
+template <> struct planar_uv_t<R2Y_ yuv_NV42> { struct { GLB_ uint8_t cb_, cr_; } * uv_; };
+template <> struct planar_uv_t<R2Y_ yuv_NV12> { struct { GLB_ uint8_t cr_, cb_; } * uv_; };
+template <> struct planar_uv_t<R2Y_ yuv_NV21> { struct { GLB_ uint8_t cb_, cr_; } * uv_; };
 
 template <R2Y_ supported S>
 R2Y_FORCE_INLINE_ auto set_planar_uv(GLB_ uint8_t in_u, GLB_ uint8_t in_v, planar_uv_t<S> & ot_uv)
@@ -43,19 +43,19 @@ R2Y_FORCE_INLINE_ auto set_planar_uv(GLB_ uint8_t in_u, GLB_ uint8_t in_v, plana
 }
 
 template <R2Y_ supported S>
-R2Y_FORCE_INLINE_ auto get_planar_uv(GLB_ uint8_t & in_u, GLB_ uint8_t & in_v, const planar_uv_t<S> & ot_uv)
+R2Y_FORCE_INLINE_ auto get_planar_uv(GLB_ uint8_t & ot_u, GLB_ uint8_t & ot_v, const planar_uv_t<S> & in_uv)
     -> STD_ enable_if_t<(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21)>
 {
-    in_u = ot_uv.uv_->cb_;
-    in_v = ot_uv.uv_->cr_;
+    ot_u = in_uv.uv_->cb_;
+    ot_v = in_uv.uv_->cr_;
 }
 
 template <R2Y_ supported S>
-R2Y_FORCE_INLINE_ auto get_planar_uv(GLB_ uint8_t & in_u, GLB_ uint8_t & in_v, const planar_uv_t<S> & ot_uv)
+R2Y_FORCE_INLINE_ auto get_planar_uv(GLB_ uint8_t & ot_u, GLB_ uint8_t & ot_v, const planar_uv_t<S> & in_uv)
     -> STD_ enable_if_t<!(S == R2Y_ yuv_NV24 || S == R2Y_ yuv_NV42 || S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21)>
 {
-    in_u = (*(ot_uv.cb_));
-    in_v = (*(ot_uv.cr_));
+    ot_u = (*(in_uv.cb_));
+    ot_v = (*(in_uv.cr_));
 }
 
 template <R2Y_ supported S>
