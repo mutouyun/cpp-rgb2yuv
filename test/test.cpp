@@ -67,8 +67,27 @@ int main(int /*argc*/, char* /*argv*/[])
     }
     TEST_(NV21);
     TEST_(YUY2);
+    {
+        auto rgb = transform<yuv_YUY2, rgb_888>(yuv.data(), 4, 4);
+        printf("## YUY2 -> 888: ");
+        for (size_t i = 0; i < rgb.count(); ++i) printf("%02X ", rgb[i]);
+        printf("\n");
+    }
     TEST_(VYUY);
     TEST_(Y41P);
+    {
+        auto rgb = transform<yuv_Y41P, rgb_888>(yuv.data(), 4, 4);
+        printf("## Y41P -> 888: ");
+        for (size_t i = 0; i < rgb.count(); ++i) printf("%02X ", rgb[i]);
+        printf("\n");
+    }
+    TEST_(Y411);
+    {
+        auto rgb = transform<yuv_Y411, rgb_888>(yuv.data(), 4, 4);
+        printf("## Y411 -> 888: ");
+        for (size_t i = 0; i < rgb.count(); ++i) printf("%02X ", rgb[i]);
+        printf("\n");
+    }
     TEST_(411P);
     TEST_(422P);
     TEST_(NV24);

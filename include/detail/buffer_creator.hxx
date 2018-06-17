@@ -66,7 +66,8 @@ GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 }
 
 template <R2Y_ supported S>
-typename STD_ enable_if<(S == R2Y_ yuv_411P || S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YU12 ||
+typename STD_ enable_if<(S == R2Y_ yuv_Y411 || S == R2Y_ yuv_411P ||
+                         S == R2Y_ yuv_YV12 || S == R2Y_ yuv_YU12 ||
                          S == R2Y_ yuv_NV12 || S == R2Y_ yuv_NV21),
 GLB_ size_t>::type calculate_size(GLB_ size_t in_w, GLB_ size_t in_h)
 {

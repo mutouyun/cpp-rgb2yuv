@@ -11,7 +11,7 @@ struct pixel_t
 {
     GLB_ uint8_t c_, b_, a_;
 
-    template <typename P> static decltype(auto) cast(P const & p)
+    template <typename P> static pixel_t const & cast(P const & p)
     {
         return reinterpret_cast<pixel_t const &>(p);
     }

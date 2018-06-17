@@ -88,6 +88,17 @@ public:
 
 /* YUV Packed */
 
+#pragma push_macro("R2Y_SET_AND_NEXT_")
+#undef  R2Y_SET_AND_NEXT_
+#define R2Y_SET_AND_NEXT_(I, OP, ...) do \
+    {                                    \
+        R2Y_ yuv_t const & pix = rhs[I]; \
+        yuv_->y##I##_ = pix.y_;          \
+        u_k          OP pix.u_;          \
+        v_k          OP pix.v_;          \
+        __VA_ARGS__                      \
+    } while(0)
+
 /* 4:2:2 */
 
 template <R2Y_ supported S> class impl_<R2Y_ yuv_YUY2, S>
@@ -103,21 +114,11 @@ public:
         : yuv_(reinterpret_cast<p_t *>(in_data))
     {}
 
-    void set_and_next(R2Y_ yuv_t const (& rhs)[2])
+    void set_and_next(R2Y_ yuv_t const (& rhs)[iterator_size])
     {
         GLB_ uint16_t u_k, v_k;
-        {
-            R2Y_ yuv_t const & pix = rhs[0];
-            yuv_->y0_ = pix.y_;
-            u_k       = pix.u_;
-            v_k       = pix.v_;
-        }
-        {
-            R2Y_ yuv_t const & pix = rhs[1];
-            yuv_->y1_ = pix.y_;
-            yuv_->cb_ = (u_k + pix.u_) >> 1;
-            yuv_->cr_ = (v_k + pix.v_) >> 1;
-        }
+        R2Y_SET_AND_NEXT_(0, = );
+        R2Y_SET_AND_NEXT_(1, +=, yuv_->cb_ = u_k >> 1; yuv_->cr_ = v_k >> 1;);
         ++yuv_;
     }
 };
@@ -141,21 +142,9 @@ public:
         : yuv_(reinterpret_cast<p_t *>(in_data))
     {}
 
-    void set_and_next(R2Y_ yuv_t const (& rhs)[8])
+    void set_and_next(R2Y_ yuv_t const (& rhs)[iterator_size])
     {
         GLB_ uint16_t u_k, v_k;
-
-#   pragma push_macro("R2Y_SET_AND_NEXT_")
-#   undef  R2Y_SET_AND_NEXT_
-#   define R2Y_SET_AND_NEXT_(I, OP, ...) do  \
-        {                                    \
-            R2Y_ yuv_t const & pix = rhs[I]; \
-            yuv_->y##I##_ = pix.y_;          \
-            u_k          OP pix.u_;          \
-            v_k          OP pix.v_;          \
-            __VA_ARGS__                      \
-        } while(0)
-
         R2Y_SET_AND_NEXT_(0, = );
         R2Y_SET_AND_NEXT_(1, +=);
         R2Y_SET_AND_NEXT_(2, +=);
@@ -163,11 +152,36 @@ public:
         R2Y_SET_AND_NEXT_(4, = );
         R2Y_SET_AND_NEXT_(5, +=);
         R2Y_SET_AND_NEXT_(6, +=);
-        R2Y_SET_AND_NEXT_(7, +=, yuv_->u1_ = u_k >> 2; yuv_->v1_ = v_k >> 2; ++yuv_;);
-
-#   pragma pop_macro("R2Y_SET_AND_NEXT_")
+        R2Y_SET_AND_NEXT_(7, +=, yuv_->u1_ = u_k >> 2; yuv_->v1_ = v_k >> 2;);
+        ++yuv_;
     }
 };
+
+template <R2Y_ supported S> class impl_<R2Y_ yuv_Y411, S>
+{
+    typedef R2Y_HELPER_ packed_yuv_t<S> p_t;
+
+    p_t * yuv_;
+
+public:
+    enum { iterator_size = 4, is_block = 0 };
+
+    impl_(R2Y_ byte_t * in_data, GLB_ size_t /*in_w*/, GLB_ size_t /*in_h*/)
+        : yuv_(reinterpret_cast<p_t *>(in_data))
+    {}
+
+    void set_and_next(R2Y_ yuv_t const (& rhs)[iterator_size])
+    {
+        GLB_ uint16_t u_k, v_k;
+        R2Y_SET_AND_NEXT_(0, = );
+        R2Y_SET_AND_NEXT_(1, +=);
+        R2Y_SET_AND_NEXT_(2, +=);
+        R2Y_SET_AND_NEXT_(3, +=, yuv_->cb_ = u_k >> 2; yuv_->cr_ = v_k >> 2;);
+        ++yuv_;
+    }
+};
+
+#pragma pop_macro("R2Y_SET_AND_NEXT_")
 
 /* YUV Planar */
 
@@ -213,7 +227,7 @@ public:
         : R2Y_HELPER_ yuv_planar<S>(y_, uv_, in_data, in_w, in_h)
     {}
 
-    void set_and_next(R2Y_ yuv_t const (& rhs)[2])
+    void set_and_next(R2Y_ yuv_t const (& rhs)[iterator_size])
     {
         GLB_ uint16_t u_k, v_k;
         {
@@ -251,7 +265,7 @@ public:
         , w_(in_w)
     {}
 
-    void set_and_next(R2Y_ yuv_t const (& rhs)[4])
+    void set_and_next(R2Y_ yuv_t const (& rhs)[iterator_size * iterator_size])
     {
         (*y_)  = rhs[0].y_; ++y_;
         (*y_)  = rhs[1].y_; ++y_;
@@ -289,7 +303,7 @@ public:
         : R2Y_HELPER_ yuv_planar<S>(y_, uv_, in_data, in_w, in_h)
     {}
 
-    void set_and_next(R2Y_ yuv_t const (& rhs)[4])
+    void set_and_next(R2Y_ yuv_t const (& rhs)[iterator_size])
     {
         GLB_ uint16_t u_k, v_k;
 
@@ -333,7 +347,7 @@ public:
         , w_(in_w)
     {}
 
-    void set_and_next(R2Y_ yuv_t const (& rhs)[16])
+    void set_and_next(R2Y_ yuv_t const (& rhs)[iterator_size * iterator_size])
     {
         int i = 0;
         for (; i < 4 ; ++i, ++y_ ) (*y_)  = rhs[i].y_;

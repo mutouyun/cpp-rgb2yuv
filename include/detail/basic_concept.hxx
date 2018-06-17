@@ -24,6 +24,7 @@ enum supported
     /*
      * YUV Formats Chapter 2. Image Formats
      * See: http://www.retiisi.org.uk/v4l2/tmp/media_api/yuv-formats.html
+     *      http://www.fourcc.org/yuv.php
     */
     yuv_MIN,
     yuv_NV24,            // 444 SP
@@ -40,7 +41,8 @@ enum supported
     yuv_NV12,            // 420 SP
     yuv_NV21,
     yuv_Y41P,            // 411
-    yuv_Y411 = yuv_Y41P,
+    yuv_Y411,            // 411, see: http://www.fourcc.org/pixel-format/yuv-y411/
+    yuv_IYU1 = yuv_Y411,
     yuv_411P,            // 411 P
     yuv_YVU9,            // 410 P
     yuv_YUV9,

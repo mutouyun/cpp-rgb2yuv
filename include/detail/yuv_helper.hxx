@@ -9,13 +9,14 @@ namespace detail_helper_ {
 
 template <R2Y_ supported> struct packed_yuv_t;
 
-template <> struct packed_yuv_t<R2Y_ yuv_YUYV> { GLB_ uint8_t y0_, cb_, y1_, cr_; };
-template <> struct packed_yuv_t<R2Y_ yuv_YVYU> { GLB_ uint8_t y0_, cr_, y1_, cb_; };
-template <> struct packed_yuv_t<R2Y_ yuv_UYVY> { GLB_ uint8_t cb_, y0_, cr_, y1_; };
-template <> struct packed_yuv_t<R2Y_ yuv_VYUY> { GLB_ uint8_t cr_, y0_, cb_, y1_; };
+template <> struct packed_yuv_t<R2Y_ yuv_YUYV> { GLB_ uint8_t y0_, cr_, y1_, cb_; };
+template <> struct packed_yuv_t<R2Y_ yuv_YVYU> { GLB_ uint8_t y0_, cb_, y1_, cr_; };
+template <> struct packed_yuv_t<R2Y_ yuv_UYVY> { GLB_ uint8_t cr_, y0_, cb_, y1_; };
+template <> struct packed_yuv_t<R2Y_ yuv_VYUY> { GLB_ uint8_t cb_, y0_, cr_, y1_; };
 template <> struct packed_yuv_t<R2Y_ yuv_Y41P> { GLB_ uint8_t u0_, y0_, v0_, y1_;
                                                  GLB_ uint8_t u1_, y2_, v1_, y3_;
                                                  GLB_ uint8_t y4_, y5_, y6_, y7_; };
+template <> struct packed_yuv_t<R2Y_ yuv_Y411> { GLB_ uint8_t cb_, y0_, y1_, cr_, y2_, y3_; };
 
 /* YUV Planar */
 

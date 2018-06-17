@@ -348,6 +348,69 @@ auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T 
 #undef  R2Y_HELPER_
 #define R2Y_HELPER_ R2Y_ detail_helper_::
 
+/* YUYV/YVYU/UYVY/VYUY */
+
+template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+    -> STD_ enable_if_t<((S == R2Y_ yuv_YUYV || S == R2Y_ yuv_YVYU ||
+                          S == R2Y_ yuv_UYVY || S == R2Y_ yuv_VYUY) && F::iterator_size == 1 && F::is_block == 0)>
+{
+    auto yuv = reinterpret_cast<R2Y_HELPER_ packed_yuv_t<S>*>(in_data);
+    for (GLB_ size_t i = 0; i < (in_w * in_h); i += R2Y_ iterator<S>::iterator_size, ++yuv)
+    {
+        R2Y_ yuv_t tmp[R2Y_ iterator<S>::iterator_size] =
+        {
+            { yuv->cr_, yuv->cb_, yuv->y0_ },
+            { yuv->cr_, yuv->cb_, yuv->y1_ }
+        };
+        STD_ forward<T>(do_sth)(tmp);
+    }
+}
+
+/* Y41P */
+
+template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+    -> STD_ enable_if_t<(S == R2Y_ yuv_Y41P && F::iterator_size == 1 && F::is_block == 0)>
+{
+    auto yuv = reinterpret_cast<R2Y_HELPER_ packed_yuv_t<S>*>(in_data);
+    for (GLB_ size_t i = 0; i < (in_w * in_h); i += R2Y_ iterator<S>::iterator_size, ++yuv)
+    {
+        R2Y_ yuv_t tmp[R2Y_ iterator<S>::iterator_size] =
+        {
+            { yuv->v0_, yuv->u0_, yuv->y0_ },
+            { yuv->v0_, yuv->u0_, yuv->y1_ },
+            { yuv->v0_, yuv->u0_, yuv->y2_ },
+            { yuv->v0_, yuv->u0_, yuv->y3_ },
+            { yuv->v1_, yuv->u1_, yuv->y4_ },
+            { yuv->v1_, yuv->u1_, yuv->y5_ },
+            { yuv->v1_, yuv->u1_, yuv->y6_ },
+            { yuv->v1_, yuv->u1_, yuv->y7_ }
+        };
+        STD_ forward<T>(do_sth)(tmp);
+    }
+}
+
+/* Y411 */
+
+template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
+auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T && do_sth)
+    -> STD_ enable_if_t<(S == R2Y_ yuv_Y411 && F::iterator_size == 1 && F::is_block == 0)>
+{
+    auto yuv = reinterpret_cast<R2Y_HELPER_ packed_yuv_t<S>*>(in_data);
+    for (GLB_ size_t i = 0; i < (in_w * in_h); i += R2Y_ iterator<S>::iterator_size, ++yuv)
+    {
+        R2Y_ yuv_t tmp[R2Y_ iterator<S>::iterator_size] =
+        {
+            { yuv->cr_, yuv->cb_, yuv->y0_ },
+            { yuv->cr_, yuv->cb_, yuv->y1_ },
+            { yuv->cr_, yuv->cb_, yuv->y2_ },
+            { yuv->cr_, yuv->cb_, yuv->y3_ }
+        };
+        STD_ forward<T>(do_sth)(tmp);
+    }
+}
+
 /* NV24/NV42 */
 
 template <R2Y_ supported S, typename T, typename F = STD_ remove_reference_t<T>>
@@ -357,15 +420,9 @@ auto pixel_foreach(R2Y_ byte_t * in_data, GLB_ size_t in_w, GLB_ size_t in_h, T 
     R2Y_ byte_t * y = nullptr;
     R2Y_HELPER_ planar_uv_t<S> uv;
     R2Y_HELPER_ yuv_planar <S>(y, uv, in_data, in_w, in_h);
-    for (GLB_ size_t i = 0; i < (in_w * in_h); ++i)
+    for (GLB_ size_t i = 0; i < (in_w * in_h); ++i, ++y, ++(uv.uv_))
     {
-        STD_ forward<T>(do_sth)(R2Y_ yuv_t
-        {
-            uv.uv_->cr_, // v
-            uv.uv_->cb_, // u
-            *y           // y
-        });
-        ++y; ++(uv.uv_);
+        STD_ forward<T>(do_sth)(R2Y_ yuv_t { uv.uv_->cr_, uv.uv_->cb_, *y });
     }
 }
 
