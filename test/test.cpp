@@ -2,6 +2,7 @@
 //
 
 #include <stdio.h>
+#include <cstring>
 
 #include "../include/rgb2yuv.hpp"
 
@@ -109,7 +110,7 @@ int main(int /*argc*/, char* /*argv*/[])
     {                                                                           \
         yuv = transform##__VA_ARGS__<rgb_888X, yuv_##TO>((uint8_t*)data, 4, 4); \
     }                                                                           \
-    printf("%s: %d ms. %s\n", #TO, static_cast<size_t>(sw.value() * 1000), ""#__VA_ARGS__)
+    printf("%s: %ld ms. %s\n", #TO, static_cast<size_t>(sw.value() * 1000), ""#__VA_ARGS__)
 
     TEST_SPEED_(YUV9);
     TEST_SPEED_(NV12);
